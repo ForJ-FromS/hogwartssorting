@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Hogwarts Sorting</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  /* ================= 공통 ================= */
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; min-height: 100vh;
+    font-family: "Pretendard", -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    font-size: 15px; line-height: 1.7; color: var(--ink);
+    background: var(--page);
+  }
+  p { margin: 0; }
+  [hidden] { display: none !important; }
+  button { font: inherit; cursor: pointer; }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 48px 20px 80px; }
+
+  /* 테마 색 — 양피지(A) */
+  body.parchment {
+    --page: #cdc3b1;
+    --ink: #2b2118; --sub: #6a5a48; --faint: #9a8a74;
+    --rule: rgba(120, 90, 50, .22); --qbg: rgba(120, 90, 50, .08);
+    --panel: #f3ead6; --field: #fbf6ea; --fieldline: #d9c9a8;
+    --gold: #b08d4f; --btn: #3a2c1f;
+  }
+  /* 테마 색 — 넥타이(B) */
+  body.tie {
+    --page: linear-gradient(165deg, #e4e0d6, #d6d0c3) fixed;
+    --ink: #1f2430; --sub: #5d6573; --faint: #959baa;
+    --rule: #e7e3da; --qbg: #f5f2ec;
+    --panel: #fffdf8; --field: #fff; --fieldline: #e3ded3;
+    --gold: #b08d4f; --btn: #1f2430;
+  }
+
+  /* 머리 */
+  header { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 26px; }
+  .houses { display: flex; height: 6px; width: 120px; border-radius: 3px; overflow: hidden; margin-bottom: 14px; }
+  .houses i { flex: 1; }
+  h1 { margin: 0 0 6px; font-size: 32px; font-weight: 800; letter-spacing: -.01em; line-height: 1.15; }
+  header p { color: var(--sub); max-width: 36em; }
+
+  .seg { display: inline-flex; padding: 3px; border-radius: 999px; background: rgba(255, 255, 255, .55); border: 1px solid var(--fieldline); }
+  .seg button { border: 0; background: transparent; border-radius: 999px; padding: 7px 18px; font-weight: 600; font-size: 13.5px; color: var(--sub); }
+  .seg button[aria-pressed=true] { background: var(--btn); color: #fff; }
+  .seglabel { font-size: 12px; font-weight: 600; color: var(--sub); margin: 0 0 6px 4px; }
+
+  /* 입력 패널 */
+  .panel { background: var(--panel); border-radius: 20px; padding: 28px; box-shadow: 0 24px 50px -30px rgba(60, 40, 20, .55); }
+  body.parchment .panel {
+    border-radius: 6px;
+    background: radial-gradient(ellipse at 30% 20%, #f6eedb 0%, #efe3c8 60%, #e6d6b4 100%);
+    box-shadow: 0 24px 50px -30px rgba(60, 40, 20, .6), inset 0 0 60px rgba(150, 110, 60, .18);
+    outline: 1px solid var(--gold); outline-offset: -8px;
+  }
+  label, .label { display: block; font-size: 13px; font-weight: 600; color: var(--sub); margin-bottom: 6px; }
+  .names { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0 18px; }
+  .names.one { grid-template-columns: 1fr; }
+  input[type=text], textarea {
+    width: 100%; font: inherit; color: var(--ink);
+    background: var(--field); border: 1px solid var(--fieldline); border-radius: 10px;
+    padding: 11px 14px; outline: none; transition: border-color .15s, box-shadow .15s;
+  }
+  textarea { min-height: 220px; resize: vertical; display: block; }
+  input[type=text]:focus, textarea:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(176, 141, 79, .2); }
+  ::placeholder { color: var(--faint); }
+  .count { text-align: right; font-size: 12px; color: var(--faint); margin-top: 4px; }
+  .drop {
+    margin-top: 14px; border: 1px dashed var(--fieldline); border-radius: 10px; padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap; color: var(--sub); font-size: 13.5px;
+    background: rgba(255, 255, 255, .3);
+  }
+  .drop.over { border-color: var(--gold); background: rgba(255, 255, 255, .7); }
+  .files { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+  .files li { display: flex; align-items: center; gap: 8px; background: var(--field); border: 1px solid var(--fieldline); border-radius: 999px; padding: 4px 6px 4px 12px; font-size: 13px; }
+  .files li button { border: 0; background: var(--qbg); color: var(--sub); width: 22px; height: 22px; border-radius: 50%; font-size: 13px; line-height: 1; padding: 0; }
+
+  .btn { border: 1px solid var(--fieldline); background: var(--field); color: var(--ink); border-radius: 999px; padding: 8px 16px; font-weight: 600; font-size: 13.5px; }
+  .btn:hover { border-color: var(--gold); }
+  .btn.primary { background: var(--btn); color: #fff; border-color: var(--btn); padding: 13px 26px; font-size: 15px; }
+  .btn:disabled { opacity: .5; cursor: default; }
+  button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+  .actions { display: flex; align-items: center; gap: 14px; margin-top: 22px; flex-wrap: wrap; }
+  .hint { font-size: 13px; color: var(--faint); }
+  .error { margin-top: 16px; padding: 12px 14px; border-radius: 10px; background: #fff; border: 1px solid #e6c3c3; color: #8a2f2f; font-size: 14px; }
+
+  /* 대기 */
+  .wait { text-align: center; padding: 64px 20px; }
+  .dots { display: inline-flex; gap: 10px; margin-bottom: 18px; }
+  .dots i { width: 10px; height: 10px; border-radius: 50%; animation: pulse 1.6s ease-in-out infinite; }
+  .dots i:nth-child(2) { animation-delay: .2s; } .dots i:nth-child(3) { animation-delay: .4s; } .dots i:nth-child(4) { animation-delay: .6s; }
+  @keyframes pulse { 0%, 100% { opacity: .25; transform: scale(.8); } 50% { opacity: 1; transform: scale(1.15); } }
+  .wait p { color: var(--sub); }
+
+  /* ================= 결과 카드 ================= */
+  .sheet { max-width: 1000px; margin: 0 auto; }
+  .sheet.solo { max-width: 600px; margin: 0; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; }
+  .sheet.solo .cols { grid-template-columns: 1fr; }
+  .person + .person { border-left: 1px solid var(--rule); }
+  .house { font-weight: 800; font-size: 12.5px; letter-spacing: .22em; color: var(--h); }
+  .person h3 { margin: 2px 0 0; font-size: 24px; letter-spacing: -.01em; line-height: 1.3; }
+  .item { padding: 17px 0; border-bottom: 1px solid var(--rule); }
+  .item:last-child { border-bottom: 0; padding-bottom: 0; }
+  .t { font-size: 12.5px; font-weight: 700; color: var(--h); margin-bottom: 4px; letter-spacing: .02em; }
+  .v { font-weight: 700; }
+  .v.plain { font-weight: 400; }
+  .n { margin-top: 8px; padding-left: 12px; border-left: 2px solid var(--h2); color: var(--sub); font-size: 14px; }
+  .n b { color: var(--ink); font-weight: 600; }
+  .q { margin-top: 8px; font-size: 13.5px; color: var(--sub); border-radius: 6px; padding: 8px 12px; background: var(--qbg); }
+  .habits { margin: 0; padding-left: 1.1em; }
+  .habits li { margin-bottom: 3px; }
+  .bond .pn { font-size: 13px; font-weight: 600; }
+  .bond h2 { letter-spacing: -.01em; line-height: 1.35; }
+  .bond .sum { color: var(--sub); }
+
+  /* --- A 양피지 --- */
+  body.parchment .sheet {
+    position: relative; border-radius: 6px; padding: 14px;
+    background: radial-gradient(ellipse at 30% 20%, #f6eedb 0%, #efe3c8 55%, #e4d3b0 100%);
+    box-shadow: 0 30px 60px -30px rgba(60, 40, 20, .6), inset 0 0 80px rgba(150, 110, 60, .22);
+  }
+  body.parchment .frame { border: 1px solid var(--gold); outline: 1px solid var(--gold); outline-offset: -6px; border-radius: 3px; padding: 6px 6px 34px; }
+  body.parchment .bond { padding: 32px 40px 28px; text-align: center; border-bottom: 1px solid var(--rule); }
+  body.parchment .bond .pn { color: #8a6a3a; letter-spacing: .08em; }
+  body.parchment .bond h2 { margin: 8px 0 10px; font-size: 28px; }
+  body.parchment .bond .sum { max-width: 40em; margin: 0 auto; }
+  body.parchment .orn { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 16px auto 0; color: var(--gold); }
+  body.parchment .orn i { display: block; width: 70px; height: 1px; background: currentColor; }
+  body.parchment .orn b { width: 7px; height: 7px; transform: rotate(45deg); border: 1px solid currentColor; }
+  body.parchment .person { padding: 0 36px; }
+  body.parchment .stripe { height: 12px; margin: 0 -36px 26px; background: var(--h) var(--sa) left center / auto 100% no-repeat; }
+  body.parchment .solo .stripe { margin-top: 0; }
+  body.parchment .plate { display: flex; align-items: center; gap: 14px; margin-bottom: 6px; }
+  body.parchment .seal {
+    width: 46px; height: 46px; border-radius: 50%; flex: none; display: grid; place-items: center;
+    color: #fff; font-weight: 800; font-size: 19px;
+    background: radial-gradient(circle at 35% 30%, var(--h) 0 55%, var(--hd) 100%);
+    box-shadow: 0 0 0 2px var(--h2), 0 3px 6px rgba(0, 0, 0, .25);
+  }
+
+  /* --- B 넥타이 --- */
+  body.tie .sheet { background: #fffdf8; border-radius: 20px; overflow: hidden; box-shadow: 0 30px 60px -30px rgba(50, 40, 30, .5); padding-bottom: 34px; }
+  body.tie .orn, body.tie .seal { display: none; }
+  body.tie .bond { padding: 30px 34px 28px; }
+  body.tie .bond .pn { color: var(--sub); }
+  body.tie .bond h2 { margin: 4px 0 8px; font-size: 26px; }
+  body.tie .bond .sum { max-width: 44em; }
+  body.tie .person { padding: 0 34px; }
+  body.tie .stripe { height: 118px; margin: 0 -34px; background: var(--h) var(--sb) left center / auto 100% no-repeat; }
+  body.tie .plate { position: relative; margin: -56px 0 18px; background: #fffdf8; border-radius: 14px; padding: 16px 20px; box-shadow: 0 10px 24px -12px rgba(0, 0, 0, .35); border-top: 3px solid var(--h2); }
+
+  .after { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; align-items: center; }
+  #stage { position: fixed; left: -10000px; top: 0; width: 600px; }
+
+  @media (max-width: 680px) {
+    .wrap { padding: 32px 14px 60px; }
+    h1 { font-size: 26px; }
+    .panel { padding: 20px; }
+    .cols { grid-template-columns: 1fr; }
+    .person + .person { border-left: 0; border-top: 1px solid var(--rule); padding-top: 0; }
+    body.parchment .person, body.tie .person { padding: 0 20px; }
+    body.parchment .stripe { margin: 0 -20px 22px; }
+    body.tie .stripe { margin: 0 -20px; height: 96px; }
+    body.parchment .person + .person .stripe { margin-top: 30px; }
+    body.tie .person + .person { margin-top: 30px; }
+    body.parchment .bond, body.tie .bond { padding: 24px 20px; }
+    .bond h2 { font-size: 21px !important; }
+  }
+  @media (prefers-reduced-motion: reduce) { .dots i { animation: none; opacity: .8; } }
+</style>
+</head>
+<body class="parchment">
+<div class="wrap">
+  <header>
+    <div>
+      <div class="houses" aria-hidden="true"><i style="background:#7f1d24"></i><i style="background:#c99a22"></i><i style="background:#22375e"></i><i style="background:#1f4d3a"></i></div>
+      <h1>Hogwarts Sorting</h1>
+      <p>인물 자료를 넣으면 기숙사와 그 해석, 교복 입는 법, 과목, 습관, 지팡이, 졸업 후 직업을 프로필로 정리합니다. 페어로 넣으면 두 사람의 관계도 함께 나옵니다.</p>
+    </div>
+    <div>
+      <p class="seglabel">카드 디자인</p>
+      <div class="seg" id="theme" role="group" aria-label="카드 디자인">
+        <button type="button" data-theme="parchment" aria-pressed="true">양피지</button>
+        <button type="button" data-theme="tie" aria-pressed="false">넥타이</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 입력 -->
+  <form id="form" class="panel" novalidate>
+    <div class="seg" id="mode" role="group" aria-label="배정 방식">
+      <button type="button" data-mode="pair" aria-pressed="true">페어</button>
+      <button type="button" data-mode="solo" aria-pressed="false">1인</button>
+    </div>
+    <div class="names" id="names">
+      <div>
+        <label for="n1" id="l1">첫 번째 인물 이름</label>
+        <input type="text" id="n1" maxlength="40" placeholder="비워 두면 자료에서 찾습니다">
+      </div>
+      <div id="box2">
+        <label for="n2">두 번째 인물 이름</label>
+        <input type="text" id="n2" maxlength="40" placeholder="비워 두면 자료에서 찾습니다">
+      </div>
+    </div>
+
+    <label for="text" id="lt">페어 자료</label>
+    <textarea id="text" maxlength="24000"></textarea>
+    <div class="count"><span id="count">0</span> / 24,000자</div>
+
+    <div class="drop" id="drop">
+      <button type="button" class="btn" id="pick">파일 첨부</button>
+      <span>txt · md 파일은 본문에 이어 붙고, 이미지는 최대 4장까지 함께 읽습니다. 여기에 끌어다 놓아도 됩니다.</span>
+      <input type="file" id="file" multiple hidden accept=".txt,.md,text/plain,text/markdown,image/png,image/jpeg,image/webp">
+    </div>
+    <ul class="files" id="files"></ul>
+
+    <div class="error" id="error" role="alert" hidden></div>
+
+    <div class="actions">
+      <button type="submit" class="btn primary" id="go">기숙사 배정하기</button>
+      <span class="hint">배정에는 30~50초가 걸립니다.</span>
+    </div>
+  </form>
+
+  <!-- 대기 -->
+  <div id="wait" class="panel wait" hidden aria-live="polite">
+    <div class="dots" aria-hidden="true"><i style="background:#7f1d24"></i><i style="background:#c99a22"></i><i style="background:#22375e"></i><i style="background:#1f4d3a"></i></div>
+    <p>자료를 읽고 있습니다. 창을 닫지 말고 기다려 주세요.</p>
+  </div>
+
+  <!-- 결과 -->
+  <section id="result" hidden>
+    <div class="sheet" id="sheet"></div>
+    <div class="after">
+      <span id="saves" style="display:contents"></span>
+      <button type="button" class="btn" id="again">자료 고쳐서 다시 배정</button>
+      <span class="hint" id="remain"></span>
+    </div>
+    <div id="stage" aria-hidden="true"></div>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  // 기숙사 넥타이 배색: c 주색, c2 줄무늬색, cd 인장 그림자색
+  const HOUSE = {
+    '그리핀도르': { en: 'GRYFFINDOR', c: '#7f1d24', c2: '#c9a24a', cd: '#4f1015' },
+    '슬리데린':   { en: 'SLYTHERIN',  c: '#1f4d3a', c2: '#a9afb4', cd: '#112c21' },
+    '래번클로':   { en: 'RAVENCLAW',  c: '#22375e', c2: '#a2723f', cd: '#121f37' },
+    '후플푸프':   { en: 'HUFFLEPUFF', c: '#c99a22', c2: '#2a2522', cd: '#8a6812' },
+  };
+  const MAX_IMAGES = 4, MAX_TEXT = 24000;
+  let images = [];
+
+  const form = $('form'), wait = $('wait'), result = $('result'), errorBox = $('error');
+  const text = $('text');
+  const show = (el) => { [form, wait, result].forEach((x) => (x.hidden = x !== el)); window.scrollTo({ top: 0 }); };
+  const fail = (msg) => { errorBox.textContent = msg; errorBox.hidden = false; };
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  // ---------- 카드 디자인 ----------
+  function setTheme(t) {
+    document.body.className = t;
+    document.querySelectorAll('#theme button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.theme === t)));
+    try { localStorage.setItem('sorting-theme', t); } catch (_) {}
+  }
+  $('theme').addEventListener('click', (e) => { if (e.target.dataset.theme) setTheme(e.target.dataset.theme); });
+  try { const saved = localStorage.getItem('sorting-theme'); if (saved === 'tie' || saved === 'parchment') setTheme(saved); } catch (_) {}
+
+  // ---------- 페어 / 1인 ----------
+  let mode = 'pair';
+  const PH = { pair: '두 사람의 성격, 말투, 습관, 서로를 대하는 방식 등을 붙여 넣습니다. 성향글이나 프로필을 그대로 넣어도 됩니다.',
+               solo: '인물의 성격, 말투, 습관 등을 붙여 넣습니다. 성향글이나 프로필을 그대로 넣어도 됩니다.' };
+  function setMode(m) {
+    mode = m;
+    document.querySelectorAll('#mode button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === m)));
+    $('box2').hidden = m === 'solo';
+    $('names').classList.toggle('one', m === 'solo');
+    $('l1').textContent = m === 'solo' ? '인물 이름' : '첫 번째 인물 이름';
+    $('lt').textContent = m === 'solo' ? '인물 자료' : '페어 자료';
+    text.placeholder = PH[m];
+  }
+  $('mode').addEventListener('click', (e) => { if (e.target.dataset.mode) setMode(e.target.dataset.mode); });
+  setMode('pair');
+
+  text.addEventListener('input', () => { $('count').textContent = text.value.length.toLocaleString(); });
+
+  // ---------- 파일 ----------
+  $('pick').addEventListener('click', () => $('file').click());
+  $('file').addEventListener('change', (e) => { addFiles(e.target.files); e.target.value = ''; });
+  const drop = $('drop');
+  ['dragenter', 'dragover'].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add('over'); }));
+  ['dragleave', 'drop'].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.remove('over'); }));
+  drop.addEventListener('drop', (e) => addFiles(e.dataTransfer.files));
+
+  async function addFiles(list) {
+    errorBox.hidden = true;
+    for (const f of list) {
+      if (f.type.startsWith('image/')) {
+        if (images.length >= MAX_IMAGES) { fail(`이미지는 ${MAX_IMAGES}장까지 첨부할 수 있습니다.`); continue; }
+        try { images.push({ name: f.name, ...(await shrink(f)) }); }
+        catch (_) { fail(`${f.name} 파일을 읽지 못했습니다.`); }
+      } else if (/\.(txt|md)$/i.test(f.name) || f.type.startsWith('text/')) {
+        const t = await f.text();
+        const joined = (text.value ? text.value.trimEnd() + '\n\n' : '') + t.trim();
+        if (joined.length > MAX_TEXT) fail('자료가 24,000자를 넘어 뒷부분이 잘렸습니다.');
+        text.value = joined.slice(0, MAX_TEXT);
+        text.dispatchEvent(new Event('input'));
+      } else {
+        fail(`${f.name}: txt, md, 이미지 파일만 첨부할 수 있습니다.`);
+      }
+    }
+    renderFiles();
+  }
+  // 이미지는 긴 변 1400px JPEG 로 줄여서 보냅니다.
+  function shrink(file) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        const s = Math.min(1, 1400 / Math.max(img.width, img.height));
+        const c = document.createElement('canvas');
+        c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+        ctx.drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        resolve({ media_type: 'image/jpeg', data: c.toDataURL('image/jpeg', 0.82).split(',')[1] });
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(); };
+      img.src = url;
+    });
+  }
+  function renderFiles() {
+    $('files').innerHTML = images.map((im, i) =>
+      `<li>${esc(im.name)}<button type="button" data-i="${i}" aria-label="${esc(im.name)} 삭제">×</button></li>`).join('');
+  }
+  $('files').addEventListener('click', (e) => {
+    const i = e.target.dataset && e.target.dataset.i;
+    if (i !== undefined) { images.splice(Number(i), 1); renderFiles(); }
+  });
+
+  // ---------- 요청 ----------
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorBox.hidden = true;
+    const names = mode === 'solo' ? [$('n1').value.trim()] : [$('n1').value.trim(), $('n2').value.trim()];
+    const body = { mode, names, text: text.value.trim(), images: images.map(({ media_type, data }) => ({ media_type, data })) };
+    if (body.text.length < 30 && !images.length) return fail('자료가 너무 짧습니다. 설정을 조금 더 넣어 주세요.');
+    const payload = JSON.stringify(body);
+    if (payload.length > 4_000_000) return fail('첨부 용량이 너무 큽니다. 이미지 수를 줄여 주세요.');
+
+    show(wait);
+    try {
+      const r = await fetch('/api/sort', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok || !data.result) throw new Error(data.error || '배정에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+      render(data.result);
+      $('remain').textContent = typeof data.remaining === 'number' ? `오늘 남은 횟수 ${data.remaining}회` : '';
+      show(result);
+    } catch (err) {
+      show(form);
+      fail(err.message === 'Failed to fetch' ? '서버에 연결하지 못했습니다. 네트워크를 확인해 주세요.' : err.message);
+    }
+  });
+  $('again').addEventListener('click', () => show(form));
+
+  // ---------- 결과 그리기 ----------
+  // 두 디자인이 같은 마크업을 쓰고, 모양은 body 의 테마 클래스(CSS)로만 바뀝니다.
+  const house = (name) => HOUSE[name] || { en: '', c: '#3b5673', c2: '#a9afb4', cd: '#22334a' };
+  const fname = (s) => String(s).replace(/[\\/:*?"<>|\s]+/g, '_');
+
+  // 넥타이 줄무늬는 그림으로 그려 둡니다 (CSS 반복 그라데이션은 PNG 저장 때 빠지기 때문).
+  // bands: [[색 키, 굵기], ...] 를 한 주기로 반복, 모두 / 방향 사선.
+  const stripeCache = {};
+  function stripe(h, height, bands) {
+    const key = h.c + height;
+    if (stripeCache[key]) return stripeCache[key];
+    const k = 2, W = 1400 * k, H = height * k;
+    const c = document.createElement('canvas'); c.width = W; c.height = H;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = h.c; ctx.fillRect(0, 0, W, H);
+    const period = bands.reduce((a, b) => a + b[1], 0) * Math.SQRT2 * k;
+    for (let x0 = -H; x0 < W + period; x0 += period) {
+      let x = x0;
+      for (const [col, wd] of bands) {
+        const w = wd * Math.SQRT2 * k;
+        ctx.fillStyle = h[col];
+        ctx.beginPath(); ctx.moveTo(x, H); ctx.lineTo(x + H, 0); ctx.lineTo(x + H + w, 0); ctx.lineTo(x + w, H); ctx.closePath(); ctx.fill();
+        x += w;
+      }
+    }
+    return (stripeCache[key] = `url(${c.toDataURL('image/png')})`);
+  }
+
+  function person(p) {
+    const h = house(p.house), w = p.wand || {};
+    const sa = stripe(h, 12, [['c', 18], ['c2', 6]]);
+    const sb = stripe(h, 118, [['c', 26], ['c2', 8], ['c', 10], ['c2', 4]]);
+    return `
+      <article class="person" style="--h:${h.c};--h2:${h.c2};--hd:${h.cd};--sa:${sa};--sb:${sb}">
+        <div class="stripe"></div>
+        <div class="plate">
+          <div class="seal">${esc(String(p.house || '').slice(0, 1))}</div>
+          <div><p class="house">${esc(h.en)}</p><h3>${esc(p.name)}</h3></div>
+        </div>
+        <div class="item"><p class="t">기숙사 해석</p><p class="v plain">${esc(p.house_reason)}</p>${p.house_evidence ? `<p class="q">근거 — ${esc(p.house_evidence)}</p>` : ''}</div>
+        <div class="item"><p class="t">모자가 망설인 기숙사</p><p class="v">${esc(p.alt_house)}</p><p class="n">${esc(p.alt_reason)}</p></div>
+        <div class="item"><p class="t">교복 입는 법</p><p class="v plain">${esc(p.uniform)}</p><p class="n">${esc(p.uniform_note)}</p></div>
+        <div class="item"><p class="t">잘하는 과목</p><p class="v">${esc(p.best_subject)}</p><p class="n">${esc(p.best_reason)}</p></div>
+        <div class="item"><p class="t">약한 과목</p><p class="v">${esc(p.weak_subject)}</p><p class="n">${esc(p.weak_reason)}</p></div>
+        <div class="item"><p class="t">습관</p><ul class="habits">${(p.habits || []).map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div>
+        <div class="item"><p class="t">지팡이</p><p class="v">${esc(w.wood)} · ${esc(w.core)} · ${esc(w.length)} · ${esc(w.flexibility)}</p>
+          <p class="n"><b>나무</b> — ${esc(w.wood_note)}</p><p class="n"><b>심</b> — ${esc(w.core_note)}</p><p class="n"><b>길이·유연성</b> — ${esc(w.build_note)}</p></div>
+        <div class="item"><p class="t">졸업 후 직업</p><p class="v">${esc(p.career)}</p><p class="n">${esc(p.career_reason)}</p></div>
+      </article>`;
+  }
+  function soloSheet(el, p) {
+    el.className = 'sheet solo';
+    el.innerHTML = `<div class="frame"><div class="cols">${person(p)}</div></div>`;
+    el.dataset.file = fname(`${p.name}_기숙사배정`);
+  }
+  function pairSheet(el, res) {
+    const [a, b] = res.characters;
+    el.className = 'sheet';
+    el.innerHTML = `<div class="frame">
+      <div class="bond"><p class="pn">${esc(a.name)} × ${esc(b.name)}</p><h2>${esc(res.relationship.headline)}</h2><p class="sum">${esc(res.relationship.summary)}</p>
+        <div class="orn" aria-hidden="true"><i></i><b></b><i></i></div></div>
+      <div class="cols">${person(a)}${person(b)}</div></div>`;
+    el.dataset.file = fname(`${a.name}_${b.name}_기숙사배정`);
+  }
+
+  function render(res) {
+    const sheet = $('sheet'), stage = $('stage'), saves = $('saves');
+    stage.innerHTML = ''; saves.innerHTML = '';
+    const addBtn = (label, target, primary) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'btn' + (primary ? ' primary' : ''); b.textContent = label;
+      b.addEventListener('click', () => save(b, target));
+      saves.appendChild(b);
+    };
+    if (res.characters.length === 1) {
+      soloSheet(sheet, res.characters[0]);
+      addBtn('카드 PNG 저장', sheet, true);
+    } else {
+      pairSheet(sheet, res);
+      addBtn('페어 카드 저장', sheet, true);
+      res.characters.forEach((p) => {   // 1인 카드는 화면 밖에 그려 두고 저장할 때만 씁니다.
+        const el = document.createElement('div');
+        stage.appendChild(el); soloSheet(el, p);
+        addBtn(`${p.name} 카드 저장`, el, false);
+      });
+    }
+  }
+
+  // ---------- PNG 저장 (지금 고른 디자인 그대로) ----------
+  async function save(btn, sheet) {
+    if (!window.html2canvas) { $('remain').textContent = '저장 기능을 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.'; return; }
+    const label = btn.textContent;
+    btn.disabled = true; btn.textContent = '저장하는 중';
+    try {
+      if (document.fonts && document.fonts.ready) await document.fonts.ready;
+      sheet.style.borderRadius = '0'; sheet.style.boxShadow = 'none';
+      const bg = document.body.classList.contains('tie') ? '#fffdf8' : '#efe3c8';
+      const canvas = await html2canvas(sheet, { scale: 2, backgroundColor: bg, useCORS: true });
+      const a = document.createElement('a');
+      a.download = (sheet.dataset.file || 'hogwarts-sorting') + '.png';
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+    } catch (_) {
+      $('remain').textContent = '이미지를 만들지 못했습니다. 다시 시도해 주세요.';
+    } finally { sheet.style.borderRadius = ''; sheet.style.boxShadow = ''; btn.disabled = false; btn.textContent = label; }
+  }
+
+  // ---------- 미리보기 : ?demo=1 (페어) / ?demo=solo (1인), &theme=tie — API 없이 화면만 확인 ----------
+  const qs = new URLSearchParams(location.search);
+  if (qs.get('theme') === 'tie' || qs.get('theme') === 'parchment') setTheme(qs.get('theme'));
+  if (qs.has('demo')) {
+    const A = { name: '한서윤', house: '래번클로',
+      house_reason: '답을 전해 듣는 것으로는 만족하지 못하고 직접 확인해야 납득하는 인물이다. 궁금한 것이 생기면 규칙보다 호기심이 먼저 움직이며, 그 대가를 치르는 일에도 거리낌이 없다.',
+      house_evidence: '「모르는 건 못 참는다」는 말버릇, 금지된 서고에 혼자 들어간 일화',
+      alt_house: '슬리데린', alt_reason: '목표를 정하면 수단을 가리지 않는 면 때문에 후보에 올랐다. 다만 그 목표가 지위나 영향력이 아니라 언제나 알아내는 것 자체여서 래번클로로 결정되었다.',
+      uniform: '넥타이는 끝까지 올려 매고 셔츠 소매는 두 번 접어 입는다. 망토 주머니에는 깃펜과 접은 양피지가 늘 들어 있다.',
+      uniform_note: '단정한 차림은 규칙을 의식해서가 아니라 옷에 신경 쓸 일을 줄이기 위한 것이다. 접어 올린 소매는 손을 쓰는 작업이 많은 사람의 버릇이다.',
+      best_subject: '고대 룬 문자', best_reason: '규칙을 찾아 해독하는 작업에는 몇 시간이고 집중한다. 암기보다 구조를 파악하는 방식으로 공부하기 때문에 처음 보는 문장에도 강하다.',
+      weak_subject: '비행', weak_reason: '몸이 먼저 반응해야 하는 일에서 생각이 길어진다. 실력이 없다기보다 판단을 내려놓지 못하는 쪽이다.',
+      habits: ['생각할 때 지팡이 끝으로 책상을 두드린다.', '빌린 책은 반납일 당일에야 돌려준다.', '하던 일을 끊지 못해 식사 시간에 자주 늦는다.'],
+      wand: { wood: '너도밤나무', core: '유니콘의 털', length: '10¾인치', flexibility: '약간 휘어짐',
+        wood_note: '너도밤나무는 나이에 비해 생각이 깊은 주인을 고르는 나무다. 편협한 사람 손에서는 제 성능을 내지 못한다는 점도 이 인물과 맞는다.',
+        core_note: '유니콘의 털은 세 가지 심 가운데 가장 일관된 마법을 낸다. 한 번 정한 대상에게만 충실한 성격과 닮았다.',
+        build_note: '짧고 약간 휘는 지팡이는 정교한 주문을 다루는 사람에게 간다.' },
+      career: '저주 해제사', career_reason: '오래된 마법의 구조를 읽어내는 능력과 위험을 감수하는 호기심이 모두 필요한 직업이다. 책상 앞 연구만으로는 만족하지 못하는 인물이어서 현장에 나가는 쪽을 택한다.' };
+    const B = { name: '도이현', house: '그리핀도르',
+      house_reason: '판단보다 행동이 먼저 나가는 인물이다. 위험을 계산하지 않는 것이 아니라, 계산이 끝나기 전에 이미 움직이고 있는 쪽에 가깝다. 자신이 나서서 해결되는 일이라면 손해를 따지지 않는다.',
+      house_evidence: '「일단 가 보고 생각한다」는 말버릇, 후배 대신 벌을 받은 일화',
+      alt_house: '후플푸프', alt_reason: '자기 사람으로 분류한 상대는 끝까지 책임지려는 성향 때문에 후보에 올랐다. 다만 지키는 방식이 묵묵히 곁에 남는 것이 아니라 앞에 서서 막아서는 것이어서 그리핀도르로 결정되었다.',
+      uniform: '넥타이는 느슨하게 풀어 두고 셔츠 첫 단추는 채우지 않는다. 망토는 입기보다 팔에 걸치고 다니는 일이 많으며, 소매는 팔꿈치까지 걷어 올린다.',
+      uniform_note: '몸을 조이는 것을 견디지 못하는 성격이 차림에 그대로 드러난다. 규칙을 무시한다기보다 불편을 참지 않는 것에 가깝고, 교수 앞에서는 넥타이를 올려 매는 정도의 눈치는 있다.',
+      best_subject: '어둠의 마법 방어술', best_reason: '주문을 외우는 것보다 상황에 반응하는 속도가 빠르다. 이론 시험 점수는 평범하지만 실습에서는 학년 상위권에 든다.',
+      weak_subject: '마법의 역사', weak_reason: '가만히 앉아 듣기만 하는 수업에서는 집중이 오래가지 않는다. 내용을 이해하지 못하는 것이 아니라 흥미를 붙이지 못하는 경우다.',
+      habits: ['계단을 두 칸씩 올라간다.', '수업 종이 울리기 직전에 교실에 들어온다.', '마주 선 상대가 어느 손에 지팡이를 쥐는지 먼저 확인한다.'],
+      wand: { wood: '산사나무', core: '용의 심근', length: '12½인치', flexibility: '단단함',
+        wood_note: '산사나무는 모순을 안고 있는 주인에게 잘 맞는 나무다. 거친 태도와 무른 속을 함께 가진 인물이라는 점에서 어울린다.',
+        core_note: '용의 심근은 세 가지 심 가운데 가장 강한 힘을 내고 주문을 빨리 익힌다. 대신 성미가 급해 사고가 잦은데, 이 점도 주인과 닮았다.',
+        build_note: '길고 단단한 지팡이는 동작이 크고 고집이 센 사람에게 간다.' },
+      career: '오러', career_reason: '위험한 상황에서 먼저 움직이는 성향과 실전 감각이 그대로 쓰이는 직업이다. 서류 업무는 서툴지만 현장 판단이 빨라 동료들이 함께 나가고 싶어 하는 쪽에 속한다.' };
+    render(qs.get('demo') === 'solo' ? { characters: [B] } : {
+      relationship: { headline: '금지 구역의 공범', summary: '기숙사 대항전에서는 서로를 가장 먼저 견제하는 사이다. 시험 기간에는 같은 책상에서 밤을 새우고, 감점을 받을 때는 대체로 둘이 함께다. 한쪽이 계획을 세우면 다른 쪽이 먼저 문을 연다.' },
+      characters: [A, B] });
+    $('remain').textContent = '미리보기 화면입니다.';
+    show(result);
+  }
+})();
+</script>
+</body>
+</html>

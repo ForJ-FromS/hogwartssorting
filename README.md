@@ -1,0 +1,44 @@
+# Hogwarts Sorting
+
+인물 자료(텍스트 · txt/md · 이미지)를 넣으면 Claude API가 기숙사와 해석, 망설인 기숙사, 교복 입는 법, 잘하는 과목·약한 과목, 습관, 지팡이, 졸업 후 직업을 프로필 서술체로 정리해 주는 사이트입니다. 페어(관계 요약 포함)와 1인 두 가지 방식이 있고, 페어 결과에서도 1인 카드를 따로 저장할 수 있습니다.
+
+## 구성
+
+| 파일 | 역할 |
+| --- | --- |
+| `index.html` | 화면 전체 (입력 · 결과 카드 · PNG 저장 · 카드 디자인 전환) |
+| `api/sort.js` | Claude API를 대신 호출하는 Vercel 서버 함수. API 키는 여기서만 씁니다. |
+| `vercel.json` | 함수 실행 시간 60초, 검색엔진 차단 헤더 |
+| `robots.txt` | 검색엔진 수집 차단 |
+
+## 올리는 순서
+
+1. https://console.anthropic.com 에서 API 키를 발급합니다. **Billing에서 월 사용 한도(spend limit)를 꼭 걸어 둡니다.**
+2. Vercel에서 이 저장소(ForJ-FromS/hogwartssorting)를 Import 합니다. 빌드 설정은 건드리지 않습니다.
+3. Vercel 프로젝트 → Settings → Environment Variables 에 추가합니다.
+
+| 이름 | 값 | 필수 |
+| --- | --- | --- |
+| `ANTHROPIC_API_KEY` | 발급한 키 | 필수 |
+| `ANTHROPIC_MODEL` | 기본 `claude-sonnet-5-5`. 더 싸게 하려면 `claude-haiku-5-5` | 선택 |
+| `DAILY_LIMIT_PER_IP` | 1인(IP)당 하루 횟수. 기본 5 | 선택 |
+| `DAILY_LIMIT_TOTAL` | 사이트 전체 하루 횟수. 기본 150 | 선택 |
+
+4. 환경변수를 넣은 뒤 Redeploy 합니다.
+
+## 횟수 제한을 정확하게 하려면 (권장)
+
+저장소 없이도 동작하지만, 그 상태에서는 횟수를 서버 메모리로만 세기 때문에 제한이 느슨합니다.
+Vercel 프로젝트 → Storage → Upstash for Redis(무료 플랜)를 연결하면 `KV_REST_API_URL`, `KV_REST_API_TOKEN` 환경변수가 자동으로 들어가고, 코드가 이를 감지해 하루 횟수를 정확하게 셉니다. 코드 수정은 필요 없습니다.
+
+## 화면만 확인하기
+
+주소 뒤에 `?demo=1`(페어) 또는 `?demo=solo`(1인)를 붙이면 API 호출 없이 예시 결과 화면이 뜹니다. `&theme=tie` 를 덧붙이면 넥타이 디자인으로 열립니다.
+
+## 카드 디자인
+
+오른쪽 위에서 **양피지 / 넥타이** 중 고를 수 있고, PNG는 지금 고른 디자인 그대로 저장됩니다. 고른 디자인은 브라우저에 기억됩니다.
+
+## 나중에 초대 코드를 붙이고 싶다면
+
+지금은 링크를 아는 사람이면 누구나 쓸 수 있습니다. 링크가 퍼졌을 때의 방어선은 하루 횟수 제한과 Anthropic 콘솔의 월 한도입니다.
