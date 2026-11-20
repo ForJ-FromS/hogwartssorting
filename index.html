@@ -60,7 +60,7 @@
 
   /* ===== 홈 화면: 9¾ 승강장 (카드 디자인과 상관없이 고정) ===== */
   body[class] { --page: #f6f6f4; }
-  #form, #wait, #ooc, header, .themebar, .after {
+  #form, #wait, #ooc, #recent, header, .themebar, .after, .viewbar {
     --ink: #2b2118; --sub: #5d5245; --faint: #9a8f82;
     --panel: #ffffff; --field: #ffffff; --fieldline: #e3ded4; --gold: #b08d4f; --btn: #2b2118;
     --rule: #ece8e0; --qbg: #f5f3ee;
@@ -158,7 +158,8 @@
   .cols { display: grid; grid-template-columns: 1fr 1fr; }
   .sheet.solo .cols { grid-template-columns: 1fr; }
   .person + .person { border-left: 1px solid var(--rule); }
-  .house { font-weight: 800; font-size: 12.5px; letter-spacing: .22em; color: var(--h); }
+  .house { font-family: 'IM Fell English SC', Georgia, serif; font-weight: 400; font-size: 15px; letter-spacing: .12em; color: var(--h); line-height: 1.3; }
+  .doc { font-family: 'IM Fell English SC', Georgia, serif !important; font-weight: 400 !important; font-size: 14px !important; }
   .person h3 { margin: 2px 0 0; font-size: 24px; letter-spacing: -.01em; line-height: 1.3; }
   .item { padding: 17px 0; border-bottom: 1px solid var(--rule); }
   .item:last-child { border-bottom: 0; padding-bottom: 0; }
@@ -199,6 +200,58 @@
   .ef .hp button[aria-pressed=true] { background: var(--btn); color: #fff; border-color: var(--btn); }
   .ef .err { font-size: 12.5px; color: #8a2f2f; }
   .busy .c, .busy .bt { opacity: .45; }
+  /* 기숙사 점수판 */
+  .pts { margin-top: 14px; display: grid; gap: 6px; }
+  .pt { display: flex; gap: 10px; align-items: baseline; font-size: 14px; color: var(--sub); }
+  .pd { flex: none; min-width: 46px; text-align: center; font-weight: 800; font-size: 13px; border-radius: 999px; padding: 1px 8px; }
+  .pd.plus { background: #e5efe6; color: #1f5a37; }
+  .pd.minus { background: #f4e2e1; color: #8a2f2f; }
+  .pr b { color: var(--ink); font-weight: 700; }
+  body.parchment .pts { max-width: 40em; margin-left: auto; margin-right: auto; text-align: left; }
+  .ef .ptrow { display: grid; grid-template-columns: 70px 1fr 2fr; gap: 6px; }
+  /* 결과 보기 탭 */
+  .viewbar { display: flex; justify-content: center; margin: 0 0 16px; }
+  /* 최근 결과 */
+  .recent { margin-top: 16px; padding: 18px 24px; }
+  .recent h3 { margin: 0 0 8px; font-size: 14px; font-weight: 700; }
+  .recent ul { list-style: none; margin: 0; padding: 0; }
+  .recent li { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid var(--rule); flex-wrap: wrap; }
+  .recent li:first-child { border-top: 0; }
+  .recent .who { font-weight: 700; }
+  .recent .hs { display: inline-flex; gap: 4px; }
+  .recent .hs i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .recent .when { font-size: 12.5px; color: var(--faint); margin-right: auto; }
+  .recent .btn { padding: 5px 12px; font-size: 12.5px; }
+  .recent .del { border: 0; background: transparent; color: var(--faint); font-size: 12.5px; padding: 5px 6px; }
+  /* 트위터용 요약 카드 (정사각형) */
+  .sq { width: 540px; height: 540px; background: #fff; color: #2b2118; display: flex; flex-direction: column; overflow: hidden; font-family: "Pretendard", sans-serif; }
+  .sq .rail { height: 8px; flex: none; }
+  .sq .top { padding: 18px 26px 10px; text-align: center; }
+  .sq .top .k { font-family: 'IM Fell English', Georgia, serif; font-style: italic; font-size: 13px; color: #8a6a3a; letter-spacing: .04em; }
+  .sq .top h2 { margin: 2px 0 0; font-size: 21px; font-weight: 800; letter-spacing: -.01em; line-height: 1.3; }
+  .sq .top .nm2 { font-size: 12.5px; color: #8a7f72; font-weight: 600; margin-top: 2px; }
+  .sq .cs { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 6px 20px 18px; min-height: 0; }
+  .sq.one .cs { grid-template-columns: 1fr; padding-top: 14px; }
+  .sq .col { border-radius: 12px; overflow: hidden; border: 1px solid #ece8e0; display: flex; flex-direction: column; min-height: 0; }
+  .sq .band { background: var(--sb) center / cover, var(--h); color: #fff; padding: 12px 14px 12px; }
+  .sq .band .hn { font-family: 'IM Fell English SC', Georgia, serif; font-size: 14px; letter-spacing: .12em; opacity: .92; line-height: 1.2; }
+  .sq .band .pn2 { font-size: 22px; font-weight: 800; line-height: 1.25; letter-spacing: -.01em; text-shadow: 0 1px 6px rgba(0,0,0,.25); }
+  .sq .rows { padding: 6px 14px 10px; display: grid; gap: 0; }
+  .sq.one .rows { grid-template-columns: 1fr 1fr; column-gap: 22px; padding: 10px 22px 14px; }
+  .sq .r { padding: 7px 0; border-bottom: 1px solid #f0ece5; }
+  .sq .r:last-child { border-bottom: 0; }
+  .sq.one .r:nth-last-child(2) { border-bottom: 0; }
+  .sq .r { padding: 6px 0; }
+  .sq .r .t2 { font-size: 11px; font-weight: 700; color: var(--h); letter-spacing: .02em; }
+  .sq .r .v2 { font-size: 14px; font-weight: 700; line-height: 1.4; max-height: 2.8em; overflow: hidden; }
+  .sq.one .band { padding: 18px 22px; }
+  .sq.one .band .pn2 { font-size: 30px; }
+  .sq.one .why { padding: 16px 24px 4px; font-size: 15px; color: #5d5245; line-height: 1.65; max-height: 7.5em; overflow: hidden; }
+  .sq.one .rows { padding: 12px 24px 16px; row-gap: 4px; }
+  .sq.one .r { padding: 10px 0; }
+  .sq.one .r .t2 { font-size: 12px; }
+  .sq.one .r .v2 { font-size: 16.5px; }
+  .sq .ft2 { flex: none; text-align: center; font-family: 'IM Fell English', Georgia, serif; font-style: italic; font-size: 12px; color: #a0947f; padding: 0 0 12px; }
   .ph { display: inline-block; height: .85em; vertical-align: middle; border-radius: 4px; background: var(--rule); opacity: .9; }
   .sheet.live .ph { animation: ph 1.4s ease-in-out infinite; }
   @keyframes ph { 0%, 100% { opacity: .45; } 50% { opacity: .95; } }
@@ -385,6 +438,12 @@
     </div>
   </form>
 
+  <!-- 최근 결과 -->
+  <div class="panel recent" id="recent" hidden>
+    <h3>최근 결과</h3>
+    <ul id="recentList"></ul>
+  </div>
+
   <!-- OOC 지침 -->
   <details class="panel ooc" id="ooc">
     <summary>OOC</summary>
@@ -421,6 +480,11 @@
 
   <!-- 결과 -->
   <section id="result" hidden>
+    <div class="viewbar"><div class="seg" id="view" role="group" aria-label="결과 보기">
+      <button type="button" data-view="1" aria-pressed="true">앞 장</button>
+      <button type="button" data-view="2" aria-pressed="false">뒷 장</button>
+      <button type="button" data-view="0" aria-pressed="false">한 장으로</button>
+    </div></div>
     <div class="sheet" id="sheet"></div>
     <div class="after">
       <span id="saves" style="display:contents"></span>
@@ -449,7 +513,7 @@
   const form = $('form'), wait = $('wait'), result = $('result'), errorBox = $('error');
   const text = $('text');
   const ooc = $('ooc');
-  const show = (el) => { [form, wait, result].forEach((x) => (x.hidden = x !== el)); ooc.hidden = el !== form; window.scrollTo({ top: 0 }); };
+  const show = (el) => { [form, wait, result].forEach((x) => (x.hidden = x !== el)); ooc.hidden = el !== form; if (el === form) renderRecent(); else $('recent').hidden = true; window.scrollTo({ top: 0 }); };
   $('ooccopy').addEventListener('click', async () => {
     const b = $('ooccopy');
     try { await navigator.clipboard.writeText($('ooctext').textContent); b.textContent = '복사했습니다'; }
@@ -731,6 +795,7 @@
           <p class="n"><b>나무</b> — ${tx(w.wood_note, 75)}</p><p class="n"><b>심</b> — ${tx(w.core_note, 75)}</p><p class="n"><b>길이·유연성</b> — ${tx(w.build_note, 60)}</p>`)}
         ${item(i, 'owls', 'O.W.L. 성적', `<table class="owl">${list(p.owls, 6, (o) => `<tr><td>${tx(o.subject, 55)}</td><td class="g g-${esc(o.grade || '')}">${tx(o.grade, 60)}</td></tr>`)}</table>`)}
         ${item(i, 'patronus', '패트로누스', `<p class="v">${tx(p.patronus, 25)}</p><p class="n">${tx(p.patronus_reason, 85)}</p>`)}
+        ${item(i, 'boggart', '보가트', `<p class="v">${tx(p.boggart, 45)}</p><p class="n">${tx(p.boggart_reason, 85)}</p>`)}
         ${item(i, 'amortentia', '아모텐시아', list(p.amortentia, 3, (a) => typeof a === 'string' ? `<p class="v">${esc(a)}</p>` : `<p class="v">${tx(a.scent, 40)}</p>${a.source ? `<p class="n">${esc(a.source)}</p>` : (a.scent ? '' : `<p class="n">${tx('', 70)}</p>`)}`))}
         ${item(i, 'career', '졸업 후 직업', `<p class="v">${tx(p.career, 25)}</p><p class="n">${tx(p.career_reason, 85)}</p>`)}
         </div>
@@ -752,7 +817,7 @@
     const p = i < 0 ? (state.relationship || {}) : (state.characters[i] || {});
     const w = p.wand || {};
     let fields = '';
-    if (f === 'relationship') fields = `<label>한 줄 제목</label>${inp('headline', p.headline)}<label>요약</label>${ta('summary', p.summary, 3)}`;
+    if (f === 'relationship') fields = `<label>한 줄 제목</label>${inp('headline', p.headline)}<label>요약</label>${ta('summary', p.summary, 3)}<label>기숙사 점수</label>${[0, 1].map((k) => { const x = (p.points || [])[k] || {}; return `<div class="ptrow">${inp('pd' + k, x.delta, k ? '-10' : '+10')}${inp('pb' + k, x.by, '준 사람')}${inp('pr' + k, x.reason, '무슨 일로')}</div>`; }).join('')}`;
     else if (f === 'house') fields = `<label>기숙사</label>${housePick('house', p.house)}<label>해석</label>${ta('house_reason', p.house_reason, 3)}<label>근거</label>${inp('house_evidence', p.house_evidence)}`;
     else if (f === 'alt') fields = `<label>망설인 기숙사</label>${housePick('alt_house', p.alt_house)}<label>이유</label>${ta('alt_reason', p.alt_reason)}`;
     else if (f === 'uniform') fields = `<label>차림</label>${ta('uniform', p.uniform)}<label>해석</label>${ta('uniform_note', p.uniform_note)}`;
@@ -762,13 +827,14 @@
     else if (f === 'wand') fields = `<div class="grid">${inp('wood', w.wood, '나무')}${inp('core', w.core, '심')}${inp('length', w.length, '길이')}${inp('flexibility', w.flexibility, '유연성')}</div><label>나무</label>${ta('wood_note', w.wood_note)}<label>심</label>${ta('core_note', w.core_note)}<label>길이·유연성</label>${ta('build_note', w.build_note, 1)}`;
     else if (f === 'owls') fields = [0, 1, 2, 3, 4, 5, 6, 7].map((k) => { const o = (p.owls || [])[k] || {}; return `<div class="owlrow">${inp('subj' + k, o.subject, k < 6 ? '과목' : '과목 (선택)')}<select name="grade${k}">${['', 'O', 'E', 'A', 'P', 'D'].map((g) => `<option value="${g}"${o.grade === g ? ' selected' : ''}>${g || '-'}</option>`).join('')}</select></div>`; }).join('');
     else if (f === 'patronus') fields = `<label>동물</label>${inp('patronus', p.patronus)}<label>이유</label>${ta('patronus_reason', p.patronus_reason, 3)}`;
+    else if (f === 'boggart') fields = `<label>보가트의 모습</label>${inp('boggart', p.boggart)}<label>이유</label>${ta('boggart_reason', p.boggart_reason, 3)}`;
     else if (f === 'amortentia') fields = [0, 1, 2].map((k) => { const a = (p.amortentia || [])[k]; const o = typeof a === 'string' ? { scent: a } : (a || {}); return `${inp('scent' + k, o.scent, '냄새')}${ta('source' + k, o.source, 1)}`; }).join('');
     else if (f === 'career') fields = `<label>직업</label>${inp('career', p.career)}<label>이유</label>${ta('career_reason', p.career_reason, 3)}`;
     return `<form class="ef" data-form="${i}:${f}">${fields}<div class="row"><button type="submit" class="btn primary">저장</button><button type="button" class="btn" data-cancel>취소</button></div></form>`;
   }
   function readForm(form, f) {
     const g = (n) => { const el = form.elements[n]; return el ? el.value.trim() : ''; };
-    if (f === 'relationship') return { headline: g('headline'), summary: g('summary') };
+    if (f === 'relationship') return { headline: g('headline'), summary: g('summary'), points: [0, 1].map((k) => ({ delta: parseInt(g('pd' + k), 10), by: g('pb' + k), reason: g('pr' + k) })).filter((x) => x.reason || Number.isFinite(x.delta)).map((x) => ({ ...x, delta: Number.isFinite(x.delta) ? x.delta : 0 })) };
     if (f === 'house') return { house: g('house'), house_reason: g('house_reason'), house_evidence: g('house_evidence') };
     if (f === 'alt') return { alt_house: g('alt_house'), alt_reason: g('alt_reason') };
     if (f === 'uniform') return { uniform: g('uniform'), uniform_note: g('uniform_note') };
@@ -778,6 +844,7 @@
     if (f === 'wand') return { wand: { wood: g('wood'), core: g('core'), length: g('length'), flexibility: g('flexibility'), wood_note: g('wood_note'), core_note: g('core_note'), build_note: g('build_note') } };
     if (f === 'owls') return { owls: [0, 1, 2, 3, 4, 5, 6, 7].map((k) => ({ subject: g('subj' + k), grade: g('grade' + k) })).filter((o) => o.subject && o.grade) };
     if (f === 'patronus') return { patronus: g('patronus'), patronus_reason: g('patronus_reason') };
+    if (f === 'boggart') return { boggart: g('boggart'), boggart_reason: g('boggart_reason') };
     if (f === 'amortentia') return { amortentia: [0, 1, 2].map((k) => ({ scent: g('scent' + k), source: g('source' + k) })).filter((a) => a.scent) };
     if (f === 'career') return { career: g('career'), career_reason: g('career_reason') };
     return {};
@@ -850,45 +917,88 @@
     el.innerHTML = `<div class="frame"><div class="cols">${person(p, el === $('sheet') ? 0 : -2, part)}</div></div>`;
     el.dataset.file = fname(`${(p && p.name) || '인물'}_기숙사배정${part ? '_' + part : ''}`);
   }
+  // 기숙사 점수판: [+10] 맥고나걸 교수 — 이유
+  function pointsHtml(pts) {
+    const list = Array.isArray(pts) ? pts.filter((x) => x && typeof x === 'object') : [];
+    while (list.length < 2) list.push({});
+    return `<div class="pts">${list.slice(0, 2).map((x) => {
+      const d = Number(x.delta);
+      const tag = Number.isFinite(d) && x.delta !== undefined && x.delta !== '' ? `<span class="pd ${d >= 0 ? 'plus' : 'minus'}">${d > 0 ? '+' : ''}${d}</span>` : `<span class="pd">${tx('', 100)}</span>`;
+      return `<p class="pt">${tag}<span class="pr">${x.by ? `<b>${esc(x.by)}</b> — ` : ''}${tx(x.reason, 70)}</span></p>`;
+    }).join('')}</div>`;
+  }
   function pairSheet(el, chars, rel, part) {
     const [a, b] = chars; rel = rel || {}; part = part || 0;
     const na = (a && a.name) || (rel.names && rel.names[0]), nb = (b && b.name) || (rel.names && rel.names[1]);
     el.className = 'sheet';
     el.innerHTML = `<div class="frame">
-      <div class="bond${isBusy(-1, 'relationship') ? ' busy' : ''}${state && state.done ? ' has-tools' : ''}" style="position:relative">${isEditing(-1, 'relationship') ? `<div class="bt">${editForm(-1, 'relationship')}</div>` : `<div class="bt"><p class="pn">${tx(na, 12)} × ${tx(nb, 12)}</p><h2>${tx(rel.headline, 40)}</h2><p class="sum">${tx(rel.summary, 90)}</p></div>${tools(-1, 'relationship')}`}
+      <div class="bond${isBusy(-1, 'relationship') ? ' busy' : ''}${state && state.done ? ' has-tools' : ''}" style="position:relative">${isEditing(-1, 'relationship') ? `<div class="bt">${editForm(-1, 'relationship')}</div>` : `<div class="bt"><p class="pn">${tx(na, 12)} × ${tx(nb, 12)}</p><h2>${tx(rel.headline, 40)}</h2><p class="sum">${tx(rel.summary, 90)}</p>${pointsHtml(rel.points)}</div>${tools(-1, 'relationship')}`}
         <div class="orn" aria-hidden="true"><i></i><b></b><i></i></div><p class="doc">HOGWARTS<br>SORTING RECORD</p></div>
       <div class="cols">${person(a, 0, part)}${person(b, 1, part)}</div></div>`;
     if (part === 2) { const bond = el.querySelector('.bond'); if (bond) bond.remove(); }
     el.dataset.file = fname(`${na || '인물1'}_${nb || '인물2'}_기숙사배정${part ? '_' + part : ''}`);
   }
 
+  // ---------- 결과 보기: 1 앞 장 / 2 뒷 장 / 0 한 장으로 ----------
+  let view = 1;
+  try { const v = localStorage.getItem('sorting-view'); if (v === '0' || v === '1' || v === '2') view = Number(v); } catch (_) {}
+  function setView(v) {
+    if (state && state.editing) commitOpenForm();
+    view = v;
+    document.querySelectorAll('#view button').forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.view) === v)));
+    try { localStorage.setItem('sorting-view', String(v)); } catch (_) {}
+    if (state) renderLive();
+  }
+  $('view').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) { setView(Number(b.dataset.view)); window.scrollTo({ top: $('result').offsetTop - 10 }); } });
+  setView(view);
+
   // 지금 state 로 카드를 다시 그립니다 (스트리밍 중에도, 끝난 뒤에도 같은 함수)
   function renderLive() {
     if (!state) return;
     const sheet = $('sheet');
-    if (state.solo) soloSheet(sheet, state.characters[0]);
-    else pairSheet(sheet, state.characters, state.relationship);
+    if (state.solo) soloSheet(sheet, state.characters[0], view);
+    else pairSheet(sheet, state.characters, state.relationship, view);
     sheet.classList.toggle('live', !state.done);
     sheet.classList.toggle('editable', !!state.done);
     sheet.classList.toggle('touch', TOUCH);
   }
   function finishButtons() {
-    const sheet = $('sheet'), stage = $('stage'), saves = $('saves');
-    stage.innerHTML = ''; saves.innerHTML = '';
+    const saves = $('saves');
+    $('stage').innerHTML = ''; saves.innerHTML = '';
     const addBtn = (label, target, primary) => {
       const b = document.createElement('button');
       b.type = 'button'; b.className = 'btn' + (primary ? ' primary' : ''); b.textContent = label;
       b.addEventListener('click', () => save(b, target));
       saves.appendChild(b);
     };
-    if (state.solo) { addBtn('카드 PNG 저장', sheet, true); return; }
-    addBtn('페어 카드 저장', sheet, true);
-    state.characters.forEach((p) => {   // 1인 카드는 화면 밖에 그려 두고 저장할 때만 씁니다.
-      const el = document.createElement('div');
-      stage.appendChild(el); soloSheet(el, p); el.__person = p;
-      addBtn(`${p.name} 카드 저장`, el, false);
-    });
+    if (state.solo) addBtn('카드 저장', { kind: 'solo', i: 0 }, true);
+    else {
+      addBtn('페어 카드 저장', { kind: 'pair' }, true);
+      state.characters.forEach((p, i) => addBtn(`${p.name || '인물'} 카드 저장`, { kind: 'solo', i }, false));
+    }
+    addBtn('요약 카드 저장', { kind: 'square' }, false);
+    persist();
   }
+
+  // 트위터용 정사각형 요약 카드
+  function squareCard(el) {
+    const chars = state.characters, rel = state.relationship || {}, one = state.solo;
+    const rows = (p) => {
+      const w = p.wand || {};
+      const am = Array.isArray(p.amortentia) && p.amortentia[0] ? (typeof p.amortentia[0] === 'string' ? p.amortentia[0] : p.amortentia[0].scent) : '';
+      const base = [['패트로누스', p.patronus], ['보가트', p.boggart], ['지팡이', [w.wood, w.core].filter(Boolean).join(' · ')], ['아모텐시아', am], ['졸업 후 직업', p.career]];
+      return (one ? [base[0], base[1], base[2], ['잘하는 과목', p.best_subject], base[3], base[4]] : base)
+        .map(([t, v]) => `<div class="r"><p class="t2">${t}</p><p class="v2">${esc(v || '')}</p></div>`).join('');
+    };
+    const col = (p) => { const h = house(p.house); return `<div class="col" style="--h:${h.c};--sb:${stripe(h, 118, [['c', 26], ['c2', 8], ['c', 10], ['c2', 4]])}"><div class="band"><p class="hn">${esc(h.en)}</p><p class="pn2">${esc(p.name || '')}</p></div>${one ? `<p class="why">${esc(p.house_reason || '')}</p>` : ''}<div class="rows">${rows(p)}</div></div>`; };
+    el.className = 'sq' + (one ? ' one' : '');
+    el.innerHTML = `<div class="rail"><i style="background:#7f1d24"></i><i style="background:#c99a22"></i><i style="background:#22375e"></i><i style="background:#1f4d3a"></i></div>
+      ${one ? '' : `<div class="top"><p class="k">Hogwarts Sorting</p><h2>${esc(rel.headline || '')}</h2><p class="nm2">${esc(chars[0].name || '')} × ${esc(chars[1].name || '')}</p></div>`}
+      <div class="cs">${chars.map(col).join('')}</div>
+      <p class="ft2">${one ? 'Hogwarts Sorting' : "King's Cross · Platform 9¾"}</p>`;
+    el.dataset.file = fname(one ? `${chars[0].name || '인물'}_요약` : `${chars[0].name || '인물1'}_${chars[1].name || '인물2'}_요약`);
+  }
+
   // 미리보기 등에서 완성 결과를 한 번에 그릴 때
   function render(res) {
     state = { solo: res.characters.length === 1, characters: res.characters, relationship: res.relationship || null, done: true, base: { job: 'demo', mode: res.characters.length === 1 ? 'solo' : 'pair', text: '', names: [], houses: [], images: [] }, editing: null, busy: null };
@@ -930,24 +1040,23 @@
   }
 
   // ---------- PNG 저장 (지금 고른 디자인 그대로) ----------
-  async function save(btn, sheet) {
+  async function save(btn, target) {
     if (!window.html2canvas) { $('remain').textContent = '저장 기능을 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.'; return; }
-    if (state && state.editing) { commitOpenForm(); renderLive(); finishButtons(); }
+    if (state && state.editing) { commitOpenForm(); renderLive(); }
     const label = btn.textContent;
     btn.disabled = true; btn.textContent = '저장하는 중';
     try {
       if (document.fonts && document.fonts.ready) await document.fonts.ready;
+      // 화면에 무엇이 보이든, 저장할 모양을 화면 밖에 새로 그려서 찍습니다.
+      const parts = target.kind === 'square' ? [0] : (split ? [1, 2] : [0]);
       const files = [];
-      if (!split) files.push(await toFile(sheet));
-      else {
-        // 같은 내용을 앞·뒤 장으로 나눠 화면 밖에 그리고 각각 찍습니다.
-        const isPair = sheet === $('sheet') && !state.solo;
-        const who = isPair ? null : (sheet === $('sheet') ? state.characters[0] : sheet.__person);
-        for (const part of [1, 2]) {
-          const el = document.createElement('div'); $('stage').appendChild(el);
-          if (isPair) pairSheet(el, state.characters, state.relationship, part); else soloSheet(el, who, part);
-          files.push(await toFile(el)); el.remove();
-        }
+      for (const part of parts) {
+        const el = document.createElement('div'); $('stage').appendChild(el);
+        if (target.kind === 'square') squareCard(el);
+        else if (target.kind === 'pair') pairSheet(el, state.characters, state.relationship, part);
+        else soloSheet(el, state.characters[target.i], part);
+        el.querySelectorAll('.tools').forEach((t) => t.remove());
+        files.push(await toFile(el)); el.remove();
       }
       await deliver(files);
     } catch (e) {
@@ -955,6 +1064,47 @@
       $('remain').textContent = '이미지를 만들지 못했습니다. 다시 시도해 주세요.';
     } finally { btn.disabled = false; btn.textContent = label; }
   }
+
+  // ---------- 최근 결과 (이 브라우저에만 저장, 5개까지) ----------
+  const RECENT_KEY = 'sorting-recent';
+  const loadRecent = () => { try { const a = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]'); return Array.isArray(a) ? a : []; } catch (_) { return []; } };
+  const saveRecent = (a) => { try { localStorage.setItem(RECENT_KEY, JSON.stringify(a.slice(0, 5))); } catch (_) {} };
+  let persistTimer = 0;
+  function persist() {
+    if (!state || !state.done || !state.base || state.base.job === 'demo') return;
+    clearTimeout(persistTimer);
+    persistTimer = setTimeout(() => {
+      const { images, ...base } = state.base;   // 이미지는 용량이 커서 빼고 저장
+      const item = { id: base.job, at: Date.now(), solo: state.solo, characters: state.characters, relationship: state.relationship, base: { ...base, images: [] } };
+      const list = loadRecent().filter((x) => x.id !== item.id);
+      list.unshift(item); saveRecent(list);
+    }, 300);
+  }
+  function renderRecent() {
+    const list = loadRecent();
+    $('recent').hidden = list.length === 0;
+    $('recentList').innerHTML = list.map((x) => {
+      const names = (x.characters || []).map((p) => esc(p.name || '이름 없음')).join(' × ');
+      const dots = (x.characters || []).map((p) => `<i style="background:${house(p.house).c}"></i>`).join('');
+      const d = new Date(x.at); const when = `${d.getMonth() + 1}월 ${d.getDate()}일 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+      return `<li><span class="hs">${dots}</span><span class="who">${names}</span><span class="when">${when}</span><button type="button" class="btn" data-open="${esc(x.id)}">열기</button><button type="button" class="del" data-del="${esc(x.id)}">삭제</button></li>`;
+    }).join('');
+  }
+  $('recentList').addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.del) { saveRecent(loadRecent().filter((x) => x.id !== b.dataset.del)); renderRecent(); return; }
+    if (b.dataset.open) {
+      const x = loadRecent().find((y) => y.id === b.dataset.open); if (!x) return;
+      streams.forEach((ac) => ac.abort()); streams = [];
+      state = { solo: x.solo, characters: x.characters, relationship: x.relationship, done: true, base: x.base, editing: null, busy: null };
+      renderLive(); finishButtons(); show(result);
+      $('remain').textContent = '저장해 둔 결과를 불러왔습니다.';
+    }
+  });
+  // 수정 중 타이핑한 것도 남도록
+  $('sheet').addEventListener('input', () => persist());
+
+  renderRecent();
 
   // ---------- 미리보기 : ?demo=1 (페어) / ?demo=solo (1인), &theme=tie — API 없이 화면만 확인 ----------
   const qs = new URLSearchParams(location.search);
@@ -976,6 +1126,7 @@
       owls: [{ subject: '고대 룬 문자', grade: 'O' }, { subject: '산술점', grade: 'O' }, { subject: '마법약', grade: 'E' }, { subject: '변신술', grade: 'E' }, { subject: '어둠의 마법 방어술', grade: 'A' }, { subject: '약초학', grade: 'A' }, { subject: '비행', grade: 'P' }],
       patronus: '까마귀', patronus_reason: '반짝이는 것을 모아 두고 잊지 않는 새다. 한 번 본 얼굴과 길을 기억하는 집요함, 무리 안에서도 혼자 움직이는 습성이 이 인물과 닮았다.',
       amortentia: [{ scent: '오래된 책의 먼지 냄새', source: '금지된 서고에서 밤을 새운 날들에서 온 냄새다.' }, { scent: '갓 깎은 깃펜 냄새', source: '생각이 막힐 때 깃펜을 깎는 버릇에서 온 냄새다.' }, { scent: '비 맞은 망토의 젖은 양털 냄새', source: '누군가 팔에 걸치고 다니던 망토의 냄새다.' }],
+      boggart: '답이 적히지 않은 백지 시험지', boggart_reason: '알아내지 못하는 것을 가장 견디지 못하는 인물이다. 아무리 들여다봐도 아무것도 읽히지 않는 종이는 그 두려움을 그대로 보여 준다.',
       career: '저주 해제사', career_reason: '오래된 마법의 구조를 읽어내는 능력과 위험을 감수하는 호기심이 모두 필요한 직업이다. 책상 앞 연구만으로는 만족하지 못하는 인물이어서 현장에 나가는 쪽을 택한다.' };
     const B = { name: '도이현', house: '그리핀도르',
       house_reason: '판단보다 행동이 먼저 나가는 인물이다. 위험을 계산하지 않는 것이 아니라, 계산이 끝나기 전에 이미 움직이고 있는 쪽에 가깝다. 자신이 나서서 해결되는 일이라면 손해를 따지지 않는다.',
@@ -993,9 +1144,11 @@
       owls: [{ subject: '어둠의 마법 방어술', grade: 'O' }, { subject: '변신술', grade: 'E' }, { subject: '비행', grade: 'E' }, { subject: '신비한 동물 돌보기', grade: 'E' }, { subject: '마법약', grade: 'A' }, { subject: '약초학', grade: 'A' }, { subject: '마법의 역사', grade: 'D' }],
       patronus: '개', patronus_reason: '앞뒤 재지 않고 먼저 뛰어나가는 쪽이다. 자기 사람이라고 정한 상대에게는 끝까지 붙어 있고, 위협 앞에서 물러서는 법을 모른다.',
       amortentia: [{ scent: '빗자루 손잡이의 나무 냄새', source: '경기장에서 보낸 시간에서 온 냄새다.' }, { scent: '갓 구운 빵 냄새', source: '연회장에 늦게 들어와도 남겨 두던 자리에서 온 냄새다.' }, { scent: '잉크 냄새', source: '옆자리에서 늘 무언가 적고 있던 사람의 냄새다.' }],
+      boggart: '쓰러진 채 대답하지 않는 친구들', boggart_reason: '자기 몸은 아끼지 않지만 곁의 사람을 지키지 못하는 것은 견디지 못한다. 먼저 뛰어드는 버릇의 뒷면이 이 두려움이다.',
       career: '오러', career_reason: '위험한 상황에서 먼저 움직이는 성향과 실전 감각이 그대로 쓰이는 직업이다. 서류 업무는 서툴지만 현장 판단이 빨라 동료들이 함께 나가고 싶어 하는 쪽에 속한다.' };
     render(qs.get('demo') === 'solo' ? { characters: [B] } : {
-      relationship: { headline: '금지 구역의 공범', summary: '기숙사 대항전에서는 서로를 가장 먼저 견제하는 사이다. 시험 기간에는 같은 책상에서 밤을 새우고, 감점을 받을 때는 대체로 둘이 함께다. 한쪽이 계획을 세우면 다른 쪽이 먼저 문을 연다.' },
+      relationship: { headline: '금지 구역의 공범', summary: '기숙사 대항전에서는 서로를 가장 먼저 견제하는 사이다. 시험 기간에는 같은 책상에서 밤을 새우고, 감점을 받을 때는 대체로 둘이 함께다. 한쪽이 계획을 세우면 다른 쪽이 먼저 문을 연다.',
+        points: [{ delta: 20, by: '플리트윅 교수', reason: '둘이 함께 풀어낸 고대 룬 문자 수수께끼로 수업 시간을 아꼈다.' }, { delta: -30, by: '스네이프 교수', reason: '통금 뒤 금지된 서고 앞에서 나란히 붙잡혔다.' }] },
       characters: [A, B] });
     $('remain').textContent = '미리보기 화면입니다.';
     show(result);
