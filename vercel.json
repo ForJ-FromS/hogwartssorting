@@ -1,6 +1,6 @@
 {
   "functions": {
-    "api/sort.js": { "maxDuration": 60 }
+    "api/sort.js": { "maxDuration": 300 }
   },
   "headers": [
     {

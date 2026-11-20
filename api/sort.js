@@ -18,7 +18,7 @@ const SYSTEM = `당신은 호그와트 세계관에 밝은 배정 담당자입�
 - 캐릭터 프로필 서술체로 씁니다. 「~다」로 끝나는 온전한 문장으로, 사실을 단정해 적습니다. (예: "판단보다 행동이 먼저 나가는 인물이다. 위험을 계산하지 않는 것이 아니라, 계산이 끝나기 전에 이미 움직이고 있는 쪽에 가깝다.")
 - 「~합니다/~해요」체, 음슴체, 뚝뚝 끊긴 단문 나열, 명사로만 끝나는 메모식 문장은 쓰지 않습니다.
 - 간결하고 직설적으로 씁니다. 감성적인 수사, 비유 남발, 과장, 느낌표, 이모지, 독자에게 말을 거는 표현은 쓰지 않습니다.
-- 해석 항목은 2~3문장으로, 무엇을 근거로 그렇게 보았는지가 드러나게 씁니다.
+- 해석 항목은 2문장 안팎으로, 무엇을 근거로 그렇게 보았는지가 드러나게 씁니다. 길게 늘이지 않습니다.
 
 재해석 원칙
 - 자료의 원래 세계관은 배정에 쓰지 않습니다. 세계관·직업·소속·사건의 배경은 흐트러뜨리고, 그 안에서 드러나는 각 인물의 생애(어떻게 자랐고 무엇을 겪었는가)와 성향(어떻게 판단하고 행동하고 관계 맺는가)만 봅니다. 기숙사 판단은 이 두 가지로만 합니다.
@@ -201,8 +201,11 @@ module.exports = async function handler(req, res) {
   ];
 
   try {
+    const ac = new AbortController();
+    const timer = setTimeout(() => ac.abort(), 280000);
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
+      signal: ac.signal,
       headers: {
         'content-type': 'application/json',
         'x-api-key': process.env.ANTHROPIC_API_KEY,
@@ -218,6 +221,7 @@ module.exports = async function handler(req, res) {
       }),
     });
 
+    clearTimeout(timer);
     if (!r.ok) {
       const detail = await r.text();
       console.error('anthropic error', r.status, detail.slice(0, 500));
@@ -236,17 +240,23 @@ module.exports = async function handler(req, res) {
       const m = txt.match(/\{[\s\S]*\}/);
       if (m) { try { result = JSON.parse(m[0]); } catch (_) {} }
     }
-    if (!result) console.error('no tool_use in response', 'stop_reason=' + data.stop_reason, JSON.stringify(data).slice(0, 1500));
+    if (!result) console.error('no tool_use in response', 'stop_reason=' + data.stop_reason, 'usage=' + JSON.stringify(data.usage), JSON.stringify(data.content).slice(0, 3000));
     else if (!Array.isArray(result.characters)) console.error('bad result shape', 'stop_reason=' + data.stop_reason, JSON.stringify(result).slice(0, 1500));
     if (!result || !Array.isArray(result.characters) || result.characters.length !== (solo ? 1 : 2) || (!solo && !result.relationship)) {
       await decr(ipKey); await decr(allKey);
-      return res.status(502).json({ error: '결과를 읽지 못했습니다. 다시 시도해 주세요.' });
+      const msg = data.stop_reason === 'max_tokens'
+        ? '결과가 너무 길어 끊겼습니다. 자료를 조금 줄이거나 1인으로 나눠 시도해 주세요.'
+        : '결과를 읽지 못했습니다. 다시 시도해 주세요.';
+      return res.status(502).json({ error: msg });
     }
     return res.status(200).json({ result, remaining: Math.max(0, PER_IP_DAILY - used) });
   } catch (e) {
     console.error('handler error', e);
     await decr(ipKey); await decr(allKey);
-    return res.status(502).json({ error: '배정에 실패했습니다. 잠시 후 다시 시도해 주세요.' });
+    const msg = e && e.name === 'AbortError'
+      ? '시간이 너무 오래 걸려 중단했습니다. 자료를 줄이거나 1인으로 나눠 시도해 주세요.'
+      : '배정에 실패했습니다. 잠시 후 다시 시도해 주세요.';
+    return res.status(502).json({ error: msg });
   }
 };
 
