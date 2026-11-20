@@ -215,7 +215,7 @@ module.exports = async function handler(req, res) {
     },
   ];
 
-  try {
+  const callClaude = async (maxTokens) => {
     const ac = new AbortController();
     const timer = setTimeout(() => ac.abort(), 280000);
     const r = await fetch('https://api.anthropic.com/v1/messages', {
@@ -228,7 +228,7 @@ module.exports = async function handler(req, res) {
       },
       body: JSON.stringify({
         model: MODEL,
-        max_tokens: solo ? 5500 : 11000,
+        max_tokens: maxTokens,
         system: SYSTEM,
         messages: [{ role: 'user', content }],
         tools: [TOOL],
@@ -237,6 +237,11 @@ module.exports = async function handler(req, res) {
     });
 
     clearTimeout(timer);
+    return r;
+  };
+
+  try {
+    let r = await callClaude(solo ? 12000 : 24000);
     if (!r.ok) {
       const detail = await r.text();
       console.error('anthropic error', r.status, detail.slice(0, 500));
@@ -249,7 +254,12 @@ module.exports = async function handler(req, res) {
       return res.status(502).json({ error: msg });
     }
 
-    const data = await r.json();
+    let data = await r.json();
+    if (data.stop_reason === 'max_tokens') {
+      console.warn('max_tokens hit, retrying with larger limit', JSON.stringify(data.usage));
+      const r2 = await callClaude(solo ? 20000 : 40000);
+      if (r2.ok) data = await r2.json();
+    }
     const block = (data.content || []).find((b) => b.type === 'tool_use');
     let result = block && block.input;
     if (!result) { // 도구 대신 JSON 텍스트로 답한 경우를 대비
