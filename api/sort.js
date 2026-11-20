@@ -35,6 +35,9 @@ const SYSTEM = `당신은 호그와트 세계관에 밝은 배정 담당자입�
 - 지팡이 심은 불사조의 깃털, 용의 심근, 유니콘의 털 중에서 고릅니다.
 - 교복 입는 법은 넥타이·셔츠·망토·니트·소매 등 눈에 보이는 차림새를 구체적으로 적습니다.
 - 습관은 학교생활에서 보이는 행동만 한 문장씩 적고, 해석은 붙이지 않습니다.
+- O.W.L. 성적은 호그와트 5학년 시험 성적입니다. 과목 6~8개를 고르고 각각 O(Outstanding)·E(Exceeds Expectations)·A(Acceptable)·P(Poor)·D(Dreadful) 중 하나를 매깁니다. 잘하는 과목은 O나 E, 약한 과목은 P나 D로 성적과 해석이 맞아야 합니다.
+- 패트로누스는 동물 하나를 고르고, 왜 그 동물인지를 인물의 성격·행동과 연결해 씁니다. 원작에 나온 동물이 아니어도 됩니다. 신화 속 생물보다는 실제 동물을 우선합니다.
+- 어몰텐시아 향은 사랑의 묘약에서 그 인물이 맡게 되는 냄새 세 가지입니다. 자료에 근거가 있는 구체적인 냄새로 고르고, 각각이 무엇에서 온 냄새인지 한 줄씩 적습니다. 페어라면 셋 중 하나는 상대와 관련된 냄새여도 됩니다.
 - 졸업 후 직업은 마법 세계의 직업 가운데 하나를 고릅니다. (예: 오러, 치료사, 저주 해제사, 용 조련사, 지팡이 제작자, 마법 정부 각 부서 직원, 호그와트 교수, 예언자일보 기자, 퀴디치 선수, 마법약 제조사, 그린고츠 직원 등)
 - 인물 이름은 사용자가 지정한 이름이 있으면 그대로, 없으면 자료에서 찾아 씁니다.
 - 사용자가 기숙사를 지정한 인물은 반드시 그 기숙사로 배정하고, 왜 그 기숙사인지를 자료를 근거로 해석합니다. 그 경우 「모자가 망설인 기숙사」는 지정된 기숙사와 다른 곳으로 고릅니다.
@@ -73,11 +76,23 @@ const CHARACTER = {
       },
       required: ['wood', 'core', 'length', 'flexibility', 'wood_note', 'core_note', 'build_note'],
     },
+    owls: {
+      type: 'array', minItems: 6, maxItems: 8,
+      items: { type: 'object', properties: { subject: str('과목명'), grade: { type: 'string', enum: ['O', 'E', 'A', 'P', 'D'] } }, required: ['subject', 'grade'] },
+      description: 'O.W.L. 성적. 잘하는 과목과 약한 과목을 포함해 6~8과목.',
+    },
+    patronus: str('패트로누스 동물 하나'),
+    patronus_reason: str('왜 그 동물인지. 2~3문장.'),
+    amortentia: {
+      type: 'array', minItems: 3, maxItems: 3,
+      items: { type: 'object', properties: { scent: str('냄새. 예: 젖은 흙 냄새'), source: str('무엇에서 온 냄새인지. 1문장.') }, required: ['scent', 'source'] },
+      description: '어몰텐시아 향 세 가지.',
+    },
     career: str('졸업 후 가질 직업 하나'),
     career_reason: str('그 직업으로 예측하는 이유. 2~3문장.'),
   },
   required: ['name', 'house', 'house_reason', 'house_evidence', 'alt_house', 'alt_reason', 'uniform', 'uniform_note',
-    'best_subject', 'best_reason', 'weak_subject', 'weak_reason', 'habits', 'wand', 'career', 'career_reason'],
+    'best_subject', 'best_reason', 'weak_subject', 'weak_reason', 'habits', 'wand', 'owls', 'patronus', 'patronus_reason', 'amortentia', 'career', 'career_reason'],
 };
 
 function buildTool(solo) {
@@ -213,7 +228,7 @@ module.exports = async function handler(req, res) {
       },
       body: JSON.stringify({
         model: MODEL,
-        max_tokens: solo ? 4000 : 8000,
+        max_tokens: solo ? 5500 : 11000,
         system: SYSTEM,
         messages: [{ role: 'user', content }],
         tools: [TOOL],

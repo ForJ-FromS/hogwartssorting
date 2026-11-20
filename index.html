@@ -148,6 +148,12 @@
   .n { margin-top: 8px; padding-left: 12px; border-left: 2px solid var(--h2); color: var(--sub); font-size: 14px; }
   .n b { color: var(--ink); font-weight: 600; }
   .q { margin-top: 8px; font-size: 13.5px; color: var(--sub); border-radius: 6px; padding: 8px 12px; background: var(--qbg); }
+  .owl { border-collapse: collapse; width: 100%; max-width: 20em; }
+  .owl td { padding: 3px 0; border-bottom: 1px dashed var(--rule); }
+  .owl tr:last-child td { border-bottom: 0; }
+  .owl .g { text-align: right; font-weight: 800; width: 2.4em; color: var(--h); }
+  .owl .g-P, .owl .g-D { color: var(--faint); }
+  .c > .v + .n + .v { margin-top: 10px; }
   .habits { margin: 0; padding-left: 1.1em; }
   .habits li { margin-bottom: 3px; }
   .bond .pn { font-size: 13px; font-weight: 600; }
@@ -572,6 +578,9 @@
         <div class="item"><p class="t">습관</p><div class="c"><ul class="habits">${(p.habits || []).map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div></div>
         <div class="item"><p class="t">지팡이</p><div class="c"><p class="v">${esc(w.wood)} · ${esc(w.core)} · ${esc(w.length)} · ${esc(w.flexibility)}</p>
           <p class="n"><b>나무</b> — ${esc(w.wood_note)}</p><p class="n"><b>심</b> — ${esc(w.core_note)}</p><p class="n"><b>길이·유연성</b> — ${esc(w.build_note)}</p></div></div>
+        <div class="item"><p class="t">O.W.L. 성적</p><div class="c"><table class="owl">${(p.owls || []).map((o) => `<tr><td>${esc(o.subject)}</td><td class="g g-${esc(o.grade)}">${esc(o.grade)}</td></tr>`).join('')}</table></div></div>
+        <div class="item"><p class="t">패트로누스</p><div class="c"><p class="v">${esc(p.patronus)}</p><p class="n">${esc(p.patronus_reason)}</p></div></div>
+        <div class="item"><p class="t">어몰텐시아</p><div class="c">${(p.amortentia || []).map((a) => `<p class="v">${esc(a.scent)}</p><p class="n">${esc(a.source)}</p>`).join('')}</div></div>
         <div class="item"><p class="t">졸업 후 직업</p><div class="c"><p class="v">${esc(p.career)}</p><p class="n">${esc(p.career_reason)}</p></div></div>
         </div>
       </article>`;
@@ -658,6 +667,9 @@
         wood_note: '너도밤나무는 나이에 비해 생각이 깊은 주인을 고르는 나무다. 편협한 사람 손에서는 제 성능을 내지 못한다는 점도 이 인물과 맞는다.',
         core_note: '유니콘의 털은 세 가지 심 가운데 가장 일관된 마법을 낸다. 한 번 정한 대상에게만 충실한 성격과 닮았다.',
         build_note: '짧고 약간 휘는 지팡이는 정교한 주문을 다루는 사람에게 간다.' },
+      owls: [{ subject: '고대 룬 문자', grade: 'O' }, { subject: '산술점', grade: 'O' }, { subject: '마법약', grade: 'E' }, { subject: '변신술', grade: 'E' }, { subject: '어둠의 마법 방어술', grade: 'A' }, { subject: '약초학', grade: 'A' }, { subject: '비행', grade: 'P' }],
+      patronus: '까마귀', patronus_reason: '반짝이는 것을 모아 두고 잊지 않는 새다. 한 번 본 얼굴과 길을 기억하는 집요함, 무리 안에서도 혼자 움직이는 습성이 이 인물과 닮았다.',
+      amortentia: [{ scent: '오래된 책의 먼지 냄새', source: '금지된 서고에서 밤을 새운 날들에서 온 냄새다.' }, { scent: '갓 깎은 깃펜 냄새', source: '생각이 막힐 때 깃펜을 깎는 버릇에서 온 냄새다.' }, { scent: '비 맞은 망토의 젖은 양털 냄새', source: '누군가 팔에 걸치고 다니던 망토의 냄새다.' }],
       career: '저주 해제사', career_reason: '오래된 마법의 구조를 읽어내는 능력과 위험을 감수하는 호기심이 모두 필요한 직업이다. 책상 앞 연구만으로는 만족하지 못하는 인물이어서 현장에 나가는 쪽을 택한다.' };
     const B = { name: '도이현', house: '그리핀도르',
       house_reason: '판단보다 행동이 먼저 나가는 인물이다. 위험을 계산하지 않는 것이 아니라, 계산이 끝나기 전에 이미 움직이고 있는 쪽에 가깝다. 자신이 나서서 해결되는 일이라면 손해를 따지지 않는다.',
@@ -672,6 +684,9 @@
         wood_note: '산사나무는 모순을 안고 있는 주인에게 잘 맞는 나무다. 거친 태도와 무른 속을 함께 가진 인물이라는 점에서 어울린다.',
         core_note: '용의 심근은 세 가지 심 가운데 가장 강한 힘을 내고 주문을 빨리 익힌다. 대신 성미가 급해 사고가 잦은데, 이 점도 주인과 닮았다.',
         build_note: '길고 단단한 지팡이는 동작이 크고 고집이 센 사람에게 간다.' },
+      owls: [{ subject: '어둠의 마법 방어술', grade: 'O' }, { subject: '변신술', grade: 'E' }, { subject: '비행', grade: 'E' }, { subject: '신비한 동물 돌보기', grade: 'E' }, { subject: '마법약', grade: 'A' }, { subject: '약초학', grade: 'A' }, { subject: '마법의 역사', grade: 'D' }],
+      patronus: '개', patronus_reason: '앞뒤 재지 않고 먼저 뛰어나가는 쪽이다. 자기 사람이라고 정한 상대에게는 끝까지 붙어 있고, 위협 앞에서 물러서는 법을 모른다.',
+      amortentia: [{ scent: '빗자루 손잡이의 나무 냄새', source: '경기장에서 보낸 시간에서 온 냄새다.' }, { scent: '갓 구운 빵 냄새', source: '연회장에 늦게 들어와도 남겨 두던 자리에서 온 냄새다.' }, { scent: '잉크 냄새', source: '옆자리에서 늘 무언가 적고 있던 사람의 냄새다.' }],
       career: '오러', career_reason: '위험한 상황에서 먼저 움직이는 성향과 실전 감각이 그대로 쓰이는 직업이다. 서류 업무는 서툴지만 현장 판단이 빨라 동료들이 함께 나가고 싶어 하는 쪽에 속한다.' };
     render(qs.get('demo') === 'solo' ? { characters: [B] } : {
       relationship: { headline: '금지 구역의 공범', summary: '기숙사 대항전에서는 서로를 가장 먼저 견제하는 사이다. 시험 기간에는 같은 책상에서 밤을 새우고, 감점을 받을 때는 대체로 둘이 함께다. 한쪽이 계획을 세우면 다른 쪽이 먼저 문을 연다.' },
