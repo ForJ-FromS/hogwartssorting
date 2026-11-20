@@ -266,8 +266,9 @@
   body.glass .seal { width: 48px; height: 48px; flex: none; border-radius: 50%; background: var(--h); color: #fff; font-weight: 800; font-size: 20px; display: grid; place-items: center; box-shadow: 0 0 0 4px rgba(255, 255, 255, .75); }
   body.glass .body { background: rgba(255, 255, 255, .78); border: 1px solid rgba(255, 255, 255, .95); border-radius: 16px; padding: 4px 20px; box-shadow: 0 10px 24px -18px rgba(30, 40, 60, .5); }
 
+  #split[aria-pressed=true] { background: var(--h, #3b5673); color: #fff; border-color: transparent; background: var(--btn); }
   .after { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; align-items: center; }
-  #stage { position: fixed; left: -10000px; top: 0; width: 600px; }
+  #stage { position: fixed; left: -10000px; top: 0; width: 1000px; }
 
   @media (max-width: 680px) {
     .wrap { padding: 32px 14px 60px; }
@@ -394,6 +395,7 @@
     <div class="sheet" id="sheet"></div>
     <div class="after">
       <span id="saves" style="display:contents"></span>
+      <button type="button" class="btn" id="split" aria-pressed="false" title="긴 카드를 앞·뒤 두 장으로 나눠 저장">두 장으로 나눠 저장</button>
       <button type="button" class="btn" id="again">자료 고쳐서 다시 배정</button>
       <span class="hint" id="remain"></span>
     </div>
@@ -668,12 +670,16 @@
   const isBusy = (i, f) => state && state.busy && state.busy.i === i && state.busy.f === f;
   const itemCls = (i, f) => `item${isBusy(i, f) ? ' busy' : ''}${state && state.done ? ' has-tools' : ''}`;
 
-  function person(p, i) {
+  function person(p, i, part) {
     p = (p && typeof p === 'object') ? p : {};
     if (i === undefined) i = -1;
+    part = part || 0;
+    const FRONT = ['house', 'alt', 'uniform', 'best', 'weak', 'habits'];
+    const keep = (f) => part === 0 || (part === 1 ? FRONT.includes(f) : !FRONT.includes(f));
     const h = house(p.house), w = (p.wand && typeof p.wand === 'object') ? p.wand : {};
     const sa = stripe(h, 12, [['c', 18], ['c2', 6]]);
     const sb = stripe(h, 118, [['c', 26], ['c2', 8], ['c', 10], ['c2', 4]]);
+    currentKeep = keep;
     const list = (arr, min, fn) => {
       const safe = Array.isArray(arr) ? arr.map((x) => (x && typeof x === 'object') || typeof x === 'string' ? x : {}) : [];
       const out = safe.map(fn); for (let i = out.length; i < min; i++) out.push(fn({})); return out.join('');
@@ -701,7 +707,9 @@
         </div>
       </article>`;
   }
+  let currentKeep = () => true;
   function item(i, f, title, inner) {
+    if (!currentKeep(f)) return '';
     const body = isEditing(i, f) ? editForm(i, f) : `<div class="c">${inner}</div>${tools(i, f)}`;
     return `<div class="${itemCls(i, f)}" data-item="${i}:${f}"><p class="t">${title}</p>${body}</div>`;
   }
@@ -808,20 +816,21 @@
   // 터치 기기에서는 도구 버튼을 항상 보이게
   const TOUCH = !!(window.matchMedia && window.matchMedia('(hover: none)').matches);
 
-  function soloSheet(el, p) {
+  function soloSheet(el, p, part) {
     el.className = 'sheet solo';
-    el.innerHTML = `<div class="frame"><div class="cols">${person(p, el === $('sheet') ? 0 : -2)}</div></div>`;
-    el.dataset.file = fname(`${(p && p.name) || '인물'}_기숙사배정`);
+    el.innerHTML = `<div class="frame"><div class="cols">${person(p, el === $('sheet') ? 0 : -2, part)}</div></div>`;
+    el.dataset.file = fname(`${(p && p.name) || '인물'}_기숙사배정${part ? '_' + part : ''}`);
   }
-  function pairSheet(el, chars, rel) {
-    const [a, b] = chars; rel = rel || {};
+  function pairSheet(el, chars, rel, part) {
+    const [a, b] = chars; rel = rel || {}; part = part || 0;
     const na = (a && a.name) || (rel.names && rel.names[0]), nb = (b && b.name) || (rel.names && rel.names[1]);
     el.className = 'sheet';
     el.innerHTML = `<div class="frame">
       <div class="bond${isBusy(-1, 'relationship') ? ' busy' : ''}${state && state.done ? ' has-tools' : ''}" style="position:relative">${isEditing(-1, 'relationship') ? `<div class="bt">${editForm(-1, 'relationship')}</div>` : `<div class="bt"><p class="pn">${tx(na, 12)} × ${tx(nb, 12)}</p><h2>${tx(rel.headline, 40)}</h2><p class="sum">${tx(rel.summary, 90)}</p></div>${tools(-1, 'relationship')}`}
         <div class="orn" aria-hidden="true"><i></i><b></b><i></i></div><p class="doc">HOGWARTS<br>SORTING RECORD</p></div>
-      <div class="cols">${person(a, 0)}${person(b, 1)}</div></div>`;
-    el.dataset.file = fname(`${na || '인물1'}_${nb || '인물2'}_기숙사배정`);
+      <div class="cols">${person(a, 0, part)}${person(b, 1, part)}</div></div>`;
+    if (part === 2) { const bond = el.querySelector('.bond'); if (bond) bond.remove(); }
+    el.dataset.file = fname(`${na || '인물1'}_${nb || '인물2'}_기숙사배정${part ? '_' + part : ''}`);
   }
 
   // 지금 state 로 카드를 다시 그립니다 (스트리밍 중에도, 끝난 뒤에도 같은 함수)
@@ -847,7 +856,7 @@
     addBtn('페어 카드 저장', sheet, true);
     state.characters.forEach((p) => {   // 1인 카드는 화면 밖에 그려 두고 저장할 때만 씁니다.
       const el = document.createElement('div');
-      stage.appendChild(el); soloSheet(el, p);
+      stage.appendChild(el); soloSheet(el, p); el.__person = p;
       addBtn(`${p.name} 카드 저장`, el, false);
     });
   }
@@ -857,33 +866,64 @@
     renderLive(); finishButtons();
   }
 
+  // ---------- 저장 옵션: 두 장으로 나누기 ----------
+  let split = false;
+  try { split = localStorage.getItem('sorting-split') === '1'; } catch (_) {}
+  const splitBtn = $('split');
+  splitBtn.setAttribute('aria-pressed', String(split));
+  splitBtn.addEventListener('click', () => {
+    split = !split; splitBtn.setAttribute('aria-pressed', String(split));
+    try { localStorage.setItem('sorting-split', split ? '1' : '0'); } catch (_) {}
+  });
+
+  // 캔버스 → PNG 파일
+  async function toFile(sheet) {
+    const bg = SAVE_BG[document.body.className] || '#ffffff';
+    sheet.classList.add('saving'); sheet.style.borderRadius = '0'; sheet.style.boxShadow = 'none';
+    try {
+      const canvas = await html2canvas(sheet, { scale: 2, backgroundColor: bg, useCORS: true });
+      const blob = await new Promise((res) => canvas.toBlob(res, 'image/png'));
+      return new File([blob], (sheet.dataset.file || 'hogwarts-sorting') + '.png', { type: 'image/png' });
+    } finally { sheet.classList.remove('saving'); sheet.style.borderRadius = ''; sheet.style.boxShadow = ''; }
+  }
+  async function deliver(files) {
+    const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (mobile && navigator.share && navigator.canShare && navigator.canShare({ files })) {
+      try { await navigator.share({ files }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
+    }
+    for (const file of files) {
+      const url = URL.createObjectURL(file);
+      const a = document.createElement('a'); a.download = file.name; a.href = url; a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+      await new Promise((r) => setTimeout(r, 400)); // 브라우저가 연속 내려받기를 막지 않게 간격
+    }
+  }
+
   // ---------- PNG 저장 (지금 고른 디자인 그대로) ----------
   async function save(btn, sheet) {
     if (!window.html2canvas) { $('remain').textContent = '저장 기능을 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.'; return; }
     if (state && state.editing) { commitOpenForm(); renderLive(); finishButtons(); }
     const label = btn.textContent;
     btn.disabled = true; btn.textContent = '저장하는 중';
-    sheet.classList.add('saving');
     try {
       if (document.fonts && document.fonts.ready) await document.fonts.ready;
-      sheet.style.borderRadius = '0'; sheet.style.boxShadow = 'none';
-      const bg = SAVE_BG[document.body.className] || '#ffffff';
-      const canvas = await html2canvas(sheet, { scale: 2, backgroundColor: bg, useCORS: true });
-      const name = (sheet.dataset.file || 'hogwarts-sorting') + '.png';
-      const blob = await new Promise((res) => canvas.toBlob(res, 'image/png'));
-      // 휴대폰: 공유 창을 띄워 「이미지 저장」으로 바로 사진첩에 넣을 수 있게. 안 되면 내려받기.
-      const file = new File([blob], name, { type: 'image/png' });
-      const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-      if (mobile && navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-        try { await navigator.share({ files: [file] }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
+      const files = [];
+      if (!split) files.push(await toFile(sheet));
+      else {
+        // 같은 내용을 앞·뒤 장으로 나눠 화면 밖에 그리고 각각 찍습니다.
+        const isPair = sheet === $('sheet') && !state.solo;
+        const who = isPair ? null : (sheet === $('sheet') ? state.characters[0] : sheet.__person);
+        for (const part of [1, 2]) {
+          const el = document.createElement('div'); $('stage').appendChild(el);
+          if (isPair) pairSheet(el, state.characters, state.relationship, part); else soloSheet(el, who, part);
+          files.push(await toFile(el)); el.remove();
+        }
       }
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.download = name; a.href = url; a.click();
-      setTimeout(() => URL.revokeObjectURL(url), 10000);
-    } catch (_) {
+      await deliver(files);
+    } catch (e) {
+      console.error(e);
       $('remain').textContent = '이미지를 만들지 못했습니다. 다시 시도해 주세요.';
-    } finally { sheet.classList.remove('saving'); sheet.style.borderRadius = ''; sheet.style.boxShadow = ''; btn.disabled = false; btn.textContent = label; }
+    } finally { btn.disabled = false; btn.textContent = label; }
   }
 
   // ---------- 미리보기 : ?demo=1 (페어) / ?demo=solo (1인), &theme=tie — API 없이 화면만 확인 ----------
