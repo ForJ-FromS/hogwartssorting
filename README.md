@@ -7,7 +7,7 @@
 | 파일 | 역할 |
 | --- | --- |
 | `index.html` | 화면 전체 (입력 · 결과 카드 · PNG 저장 · 카드 디자인 전환) |
-| `api/sort.js` | Claude API를 대신 호출하는 Vercel 서버 함수. API 키는 여기서만 씁니다. |
+| `api/sort.js` | Claude API를 대신 호출하는 Vercel 서버 함수. API 키는 여기서만 씁니다. 인물 한 명(또는 관계 요약) 단위로 요청을 받아 결과를 스트리밍으로 흘려 보냅니다. 페어는 화면에서 요청 3개를 동시에 보냅니다. |
 | `vercel.json` | 함수 실행 시간 60초, 검색엔진 차단 헤더 |
 | `robots.txt` | 검색엔진 수집 차단 |
 
@@ -21,7 +21,7 @@
 | --- | --- | --- |
 | `ANTHROPIC_API_KEY` | 발급한 키 | 필수 |
 | `ANTHROPIC_MODEL` | 기본 `claude-sonnet-5-5`. 더 싸게 하려면 `claude-haiku-5-5` | 선택 |
-| `DAILY_LIMIT_PER_IP` | 1인(IP)당 하루 횟수. 기본 5 | 선택 |
+| `DAILY_LIMIT_PER_IP` | 1인(IP)당 하루 횟수. 기본 5 (페어 한 번 = 1회) | 선택 |
 | `DAILY_LIMIT_TOTAL` | 사이트 전체 하루 횟수. 기본 150 | 선택 |
 
 4. 환경변수를 넣은 뒤 Redeploy 합니다.

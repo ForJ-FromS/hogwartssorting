@@ -154,6 +154,9 @@
   .owl .g { text-align: right; font-weight: 800; width: 2.4em; color: var(--h); }
   .owl .g-P, .owl .g-D { color: var(--faint); }
   .c > .v + .n + .v { margin-top: 10px; }
+  .ph { display: inline-block; height: .85em; vertical-align: middle; border-radius: 4px; background: var(--rule); opacity: .9; }
+  .sheet.live .ph { animation: ph 1.4s ease-in-out infinite; }
+  @keyframes ph { 0%, 100% { opacity: .45; } 50% { opacity: .95; } }
   .habits { margin: 0; padding-left: 1.1em; }
   .habits li { margin-bottom: 3px; }
   .bond .pn { font-size: 13px; font-weight: 600; }
@@ -267,7 +270,7 @@
     body.glass .bond { padding: 24px 20px; }
     .seg { flex-wrap: wrap; }
   }
-  @media (prefers-reduced-motion: reduce) { .dots i { animation: none; opacity: .8; } }
+  @media (prefers-reduced-motion: reduce) { .dots i, .sheet.live .ph { animation: none; opacity: .8; } }
 </style>
 </head>
 <body class="parchment">
@@ -400,6 +403,8 @@
   });
   const fail = (msg) => { errorBox.textContent = msg; errorBox.hidden = false; };
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  // 아직 안 온 값은 흐린 막대로 (w: 막대 너비 %)
+  const tx = (s, w) => (s === undefined || s === null || s === '') ? `<span class="ph" style="width:${w || 60}%"></span>` : esc(s);
 
   // ---------- 카드 디자인 ----------
   const THEMES = ['parchment', 'tie', 'banner', 'record', 'glass'];
@@ -492,35 +497,109 @@
     if (i !== undefined) { images.splice(Number(i), 1); renderFiles(); }
   });
 
-  // ---------- 요청 ----------
+  // ---------- 요청: 인물별로 동시에 보내고, 오는 대로 그립니다 ----------
+  let state = null, streams = [], rerenderTimer = 0;
+  const jobId = () => (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36)).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 40);
+
+  // 아직 다 안 온 JSON 을 읽을 수 있는 데까지 읽습니다.
+  function partialParse(src) {
+    if (!src) return null;
+    let str = src, stack = [], inStr = false, esc = false, cut = src.length;
+    for (let i = 0; i < src.length; i++) {
+      const ch = src[i];
+      if (inStr) { if (esc) esc = false; else if (ch === '\\') esc = true; else if (ch === '"') inStr = false; continue; }
+      if (ch === '"') inStr = true;
+      else if (ch === '{' || ch === '[') stack.push(ch);
+      else if (ch === '}' || ch === ']') stack.pop();
+    }
+    if (inStr) str += '"';
+    for (let tries = 0; tries < 3; tries++) {
+      let t = str.replace(/,\s*$/, '').replace(/:\s*$/, '').replace(/(,|\{)\s*"[^"]*"\s*$/, '$1').replace(/,\s*$/, '');
+      t += stack.slice().reverse().map((c) => (c === '{' ? '}' : ']')).join('');
+      try { return JSON.parse(t); } catch (_) {}
+      // 마지막 토막을 조금 더 잘라내고 재시도
+      const j = Math.max(str.lastIndexOf(','), str.lastIndexOf('{'), str.lastIndexOf('['));
+      if (j <= 0) break;
+      str = str.slice(0, j + (str[j] === ',' ? 0 : 1));
+      stack = []; inStr = false;
+      for (let i = 0; i < str.length; i++) { const ch = str[i]; if (inStr) { if (esc) esc = false; else if (ch === '\\') esc = true; else if (ch === '"') inStr = false; continue; } if (ch === '"') inStr = true; else if (ch === '{' || ch === '[') stack.push(ch); else if (ch === '}' || ch === ']') stack.pop(); }
+      if (inStr) str += '"';
+    }
+    return null;
+  }
+
+  async function streamPart(payload, onJson) {
+    const ac = new AbortController(); streams.push(ac);
+    const r = await fetch('/api/sort', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), signal: ac.signal });
+    if (!r.ok || !r.headers.get('content-type') || !r.headers.get('content-type').includes('text/event-stream')) {
+      const data = await r.json().catch(() => ({}));
+      throw new Error(data.error || '배정에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+    }
+    const reader = r.body.getReader(), dec = new TextDecoder();
+    let buf = '', json = '';
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let i;
+      while ((i = buf.indexOf('\n\n')) >= 0) {
+        const line = buf.slice(0, i).split('\n').find((l) => l.startsWith('data:')); buf = buf.slice(i + 2);
+        if (!line) continue;
+        let ev; try { ev = JSON.parse(line.slice(5)); } catch (_) { continue; }
+        if (ev.error) throw new Error(ev.error);
+        if (ev.j) { json += ev.j; onJson(json, false); }
+        if (ev.done) { onJson(JSON.stringify(ev.result), true); return ev; }
+      }
+    }
+    throw new Error('연결이 끊겼습니다. 다시 시도해 주세요.');
+  }
+
+  function scheduleRender() {
+    if (rerenderTimer) return;
+    rerenderTimer = setTimeout(() => { rerenderTimer = 0; renderLive(); }, 120);
+  }
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     errorBox.hidden = true;
-    const names = mode === 'solo' ? [$('n1').value.trim()] : [$('n1').value.trim(), $('n2').value.trim()];
-    const houses = mode === 'solo' ? [$('h1').dataset.value] : [$('h1').dataset.value, $('h2').dataset.value];
-    const body = { mode, names, houses, text: text.value.trim(), images: images.map(({ media_type, data }) => ({ media_type, data })) };
-    if (body.text.length < 30 && !images.length) return fail('자료가 너무 짧습니다. 설정을 조금 더 넣어 주세요.');
-    const payload = JSON.stringify(body);
-    if (payload.length > 4_000_000) return fail('첨부 용량이 너무 큽니다. 이미지 수를 줄여 주세요.');
+    const solo = mode === 'solo';
+    const names = solo ? [$('n1').value.trim()] : [$('n1').value.trim(), $('n2').value.trim()];
+    const houses = solo ? [$('h1').dataset.value] : [$('h1').dataset.value, $('h2').dataset.value];
+    const base = { mode, names, houses, text: text.value.trim(), images: images.map(({ media_type, data }) => ({ media_type, data })), job: jobId() };
+    if (base.text.length < 30 && !images.length) return fail('자료가 너무 짧습니다. 설정을 조금 더 넣어 주세요.');
+    if (JSON.stringify(base).length > 4_000_000) return fail('첨부 용량이 너무 큽니다. 이미지 수를 줄여 주세요.');
 
-    show(wait);
+    streams.forEach((ac) => ac.abort()); streams = [];
+    state = { solo, characters: solo ? [{}] : [{}, {}], relationship: solo ? null : {}, done: false, names };
+    $('saves').innerHTML = ''; $('stage').innerHTML = '';
+    $('remain').textContent = '모자가 생각하는 중입니다. 결과가 나오는 대로 채워집니다.';
+    renderLive(); show(result);
+
+    const jobs = state.characters.map((_, i) => streamPart({ ...base, part: 'character', index: i }, (json) => {
+      const p = partialParse(json); if (p) { state.characters[i] = p; scheduleRender(); }
+    }));
+    if (!solo) jobs.push(streamPart({ ...base, part: 'relationship' }, (json) => {
+      const p = partialParse(json); if (p) { state.relationship = p; scheduleRender(); }
+    }));
     try {
-      const r = await fetch('/api/sort', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload });
-      const data = await r.json().catch(() => ({}));
-      if (!r.ok || !data.result) throw new Error(data.error || '배정에 실패했습니다. 잠시 후 다시 시도해 주세요.');
-      render(data.result);
-      $('remain').textContent = typeof data.remaining === 'number' ? `오늘 남은 횟수 ${data.remaining}회` : '';
-      show(result);
+      const results = await Promise.all(jobs);
+      clearTimeout(rerenderTimer); rerenderTimer = 0;
+      state.done = true; renderLive();
+      const remaining = results[0] && results[0].remaining;
+      $('remain').textContent = typeof remaining === 'number' ? `오늘 남은 횟수 ${remaining}회` : '';
+      finishButtons();
     } catch (err) {
+      streams.forEach((ac) => ac.abort()); streams = [];
       show(form);
-      fail(err.message === 'Failed to fetch' ? '서버에 연결하지 못했습니다. 네트워크를 확인해 주세요.' : err.message);
+      fail(err.name === 'AbortError' ? '' : (err.message === 'Failed to fetch' ? '서버에 연결하지 못했습니다. 네트워크를 확인해 주세요.' : err.message));
+      if (!errorBox.textContent) errorBox.hidden = true;
     }
   });
-  $('again').addEventListener('click', () => show(form));
+  $('again').addEventListener('click', () => { streams.forEach((ac) => ac.abort()); streams = []; show(form); });
 
   // ---------- 결과 그리기 ----------
   // 두 디자인이 같은 마크업을 쓰고, 모양은 body 의 테마 클래스(CSS)로만 바뀝니다.
-  const house = (name) => HOUSE[name] || { en: '', c: '#3b5673', c2: '#a9afb4', cd: '#22334a', soft: '#dde3ea' };
+  const house = (name) => HOUSE[name] || { en: '', c: '#8a8f99', c2: '#c3c7ce', cd: '#5d6270', soft: '#e6e8ec' };
   const fname = (s) => String(s).replace(/[\\/:*?"<>|\s]+/g, '_');
 
   // 넥타이 줄무늬는 그림으로 그려 둡니다 (CSS 반복 그라데이션은 PNG 저장 때 빠지기 때문).
@@ -559,48 +638,59 @@
   }
 
   function person(p) {
+    p = p || {};
     const h = house(p.house), w = p.wand || {};
     const sa = stripe(h, 12, [['c', 18], ['c2', 6]]);
     const sb = stripe(h, 118, [['c', 26], ['c2', 8], ['c', 10], ['c2', 4]]);
+    const list = (arr, min, fn) => { const out = (arr || []).map(fn); for (let i = out.length; i < min; i++) out.push(fn({})); return out.join(''); };
     return `
       <article class="person" style="--h:${h.c};--h2:${h.c2};--hd:${h.cd};--soft:${h.soft};--sa:${sa};--sb:${sb};--sf:${flag(h)}">
         <div class="stripe"></div>
         <div class="plate">
-          <div class="seal"><span>${esc((h.en || '').slice(0, 1))}</span></div>
-          <div class="nm"><p class="house">${esc(h.en)}</p><h3>${esc(p.name)}</h3></div>
+          <div class="seal"><span>${esc((h.en || '?').slice(0, 1))}</span></div>
+          <div class="nm"><p class="house">${esc(h.en || 'SORTING')}</p><h3>${tx(p.name, 30)}</h3></div>
         </div>
         <div class="body">
-        <div class="item"><p class="t">기숙사 해석</p><div class="c"><p class="v plain">${esc(p.house_reason)}</p>${p.house_evidence ? `<p class="q">근거 — ${esc(p.house_evidence)}</p>` : ''}</div></div>
-        <div class="item"><p class="t">모자가 망설인 기숙사</p><div class="c"><p class="v">${esc(p.alt_house)}</p><p class="n">${esc(p.alt_reason)}</p></div></div>
-        <div class="item"><p class="t">교복 입는 법</p><div class="c"><p class="v plain">${esc(p.uniform)}</p><p class="n">${esc(p.uniform_note)}</p></div></div>
-        <div class="item"><p class="t">잘하는 과목</p><div class="c"><p class="v">${esc(p.best_subject)}</p><p class="n">${esc(p.best_reason)}</p></div></div>
-        <div class="item"><p class="t">약한 과목</p><div class="c"><p class="v">${esc(p.weak_subject)}</p><p class="n">${esc(p.weak_reason)}</p></div></div>
-        <div class="item"><p class="t">습관</p><div class="c"><ul class="habits">${(p.habits || []).map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div></div>
-        <div class="item"><p class="t">지팡이</p><div class="c"><p class="v">${esc(w.wood)} · ${esc(w.core)} · ${esc(w.length)} · ${esc(w.flexibility)}</p>
-          <p class="n"><b>나무</b> — ${esc(w.wood_note)}</p><p class="n"><b>심</b> — ${esc(w.core_note)}</p><p class="n"><b>길이·유연성</b> — ${esc(w.build_note)}</p></div></div>
-        <div class="item"><p class="t">O.W.L. 성적</p><div class="c"><table class="owl">${(p.owls || []).map((o) => `<tr><td>${esc(o.subject)}</td><td class="g g-${esc(o.grade)}">${esc(o.grade)}</td></tr>`).join('')}</table></div></div>
-        <div class="item"><p class="t">패트로누스</p><div class="c"><p class="v">${esc(p.patronus)}</p><p class="n">${esc(p.patronus_reason)}</p></div></div>
-        <div class="item"><p class="t">어몰텐시아</p><div class="c">${(p.amortentia || []).map((a) => `<p class="v">${esc(a.scent)}</p><p class="n">${esc(a.source)}</p>`).join('')}</div></div>
-        <div class="item"><p class="t">졸업 후 직업</p><div class="c"><p class="v">${esc(p.career)}</p><p class="n">${esc(p.career_reason)}</p></div></div>
+        <div class="item"><p class="t">기숙사 해석</p><div class="c"><p class="v plain">${tx(p.house_reason, 95)}</p>${p.house_evidence ? `<p class="q">근거 — ${esc(p.house_evidence)}</p>` : ''}</div></div>
+        <div class="item"><p class="t">모자가 망설인 기숙사</p><div class="c"><p class="v">${tx(p.alt_house, 25)}</p><p class="n">${tx(p.alt_reason, 85)}</p></div></div>
+        <div class="item"><p class="t">교복 입는 법</p><div class="c"><p class="v plain">${tx(p.uniform, 90)}</p><p class="n">${tx(p.uniform_note, 80)}</p></div></div>
+        <div class="item"><p class="t">잘하는 과목</p><div class="c"><p class="v">${tx(p.best_subject, 30)}</p><p class="n">${tx(p.best_reason, 80)}</p></div></div>
+        <div class="item"><p class="t">약한 과목</p><div class="c"><p class="v">${tx(p.weak_subject, 30)}</p><p class="n">${tx(p.weak_reason, 80)}</p></div></div>
+        <div class="item"><p class="t">습관</p><div class="c"><ul class="habits">${list(p.habits, 3, (x) => `<li>${tx(typeof x === 'string' ? x : '', 70)}</li>`)}</ul></div></div>
+        <div class="item"><p class="t">지팡이</p><div class="c"><p class="v">${w.wood ? `${esc(w.wood)} · ${tx(w.core, 20)} · ${tx(w.length, 12)} · ${tx(w.flexibility, 16)}` : tx('', 60)}</p>
+          <p class="n"><b>나무</b> — ${tx(w.wood_note, 75)}</p><p class="n"><b>심</b> — ${tx(w.core_note, 75)}</p><p class="n"><b>길이·유연성</b> — ${tx(w.build_note, 60)}</p></div></div>
+        <div class="item"><p class="t">O.W.L. 성적</p><div class="c"><table class="owl">${list(p.owls, 6, (o) => `<tr><td>${tx(o.subject, 55)}</td><td class="g g-${esc(o.grade || '')}">${tx(o.grade, 60)}</td></tr>`)}</table></div></div>
+        <div class="item"><p class="t">패트로누스</p><div class="c"><p class="v">${tx(p.patronus, 25)}</p><p class="n">${tx(p.patronus_reason, 85)}</p></div></div>
+        <div class="item"><p class="t">어몰텐시아</p><div class="c">${list(p.amortentia, 3, (a) => `<p class="v">${tx(a.scent, 40)}</p><p class="n">${tx(a.source, 70)}</p>`)}</div></div>
+        <div class="item"><p class="t">졸업 후 직업</p><div class="c"><p class="v">${tx(p.career, 25)}</p><p class="n">${tx(p.career_reason, 85)}</p></div></div>
         </div>
       </article>`;
   }
   function soloSheet(el, p) {
     el.className = 'sheet solo';
     el.innerHTML = `<div class="frame"><div class="cols">${person(p)}</div></div>`;
-    el.dataset.file = fname(`${p.name}_기숙사배정`);
+    el.dataset.file = fname(`${(p && p.name) || '인물'}_기숙사배정`);
   }
-  function pairSheet(el, res) {
-    const [a, b] = res.characters;
+  function pairSheet(el, chars, rel) {
+    const [a, b] = chars; rel = rel || {};
+    const na = (a && a.name) || (rel.names && rel.names[0]), nb = (b && b.name) || (rel.names && rel.names[1]);
     el.className = 'sheet';
     el.innerHTML = `<div class="frame">
-      <div class="bond"><div class="bt"><p class="pn">${esc(a.name)} × ${esc(b.name)}</p><h2>${esc(res.relationship.headline)}</h2><p class="sum">${esc(res.relationship.summary)}</p></div>
+      <div class="bond"><div class="bt"><p class="pn">${tx(na, 12)} × ${tx(nb, 12)}</p><h2>${tx(rel.headline, 40)}</h2><p class="sum">${tx(rel.summary, 90)}</p></div>
         <div class="orn" aria-hidden="true"><i></i><b></b><i></i></div><p class="doc">HOGWARTS<br>SORTING RECORD</p></div>
       <div class="cols">${person(a)}${person(b)}</div></div>`;
-    el.dataset.file = fname(`${a.name}_${b.name}_기숙사배정`);
+    el.dataset.file = fname(`${na || '인물1'}_${nb || '인물2'}_기숙사배정`);
   }
 
-  function render(res) {
+  // 지금 state 로 카드를 다시 그립니다 (스트리밍 중에도, 끝난 뒤에도 같은 함수)
+  function renderLive() {
+    if (!state) return;
+    const sheet = $('sheet');
+    sheet.classList.toggle('live', !state.done);
+    if (state.solo) soloSheet(sheet, state.characters[0]);
+    else pairSheet(sheet, state.characters, state.relationship);
+  }
+  function finishButtons() {
     const sheet = $('sheet'), stage = $('stage'), saves = $('saves');
     stage.innerHTML = ''; saves.innerHTML = '';
     const addBtn = (label, target, primary) => {
@@ -609,18 +699,18 @@
       b.addEventListener('click', () => save(b, target));
       saves.appendChild(b);
     };
-    if (res.characters.length === 1) {
-      soloSheet(sheet, res.characters[0]);
-      addBtn('카드 PNG 저장', sheet, true);
-    } else {
-      pairSheet(sheet, res);
-      addBtn('페어 카드 저장', sheet, true);
-      res.characters.forEach((p) => {   // 1인 카드는 화면 밖에 그려 두고 저장할 때만 씁니다.
-        const el = document.createElement('div');
-        stage.appendChild(el); soloSheet(el, p);
-        addBtn(`${p.name} 카드 저장`, el, false);
-      });
-    }
+    if (state.solo) { addBtn('카드 PNG 저장', sheet, true); return; }
+    addBtn('페어 카드 저장', sheet, true);
+    state.characters.forEach((p) => {   // 1인 카드는 화면 밖에 그려 두고 저장할 때만 씁니다.
+      const el = document.createElement('div');
+      stage.appendChild(el); soloSheet(el, p);
+      addBtn(`${p.name} 카드 저장`, el, false);
+    });
+  }
+  // 미리보기 등에서 완성 결과를 한 번에 그릴 때
+  function render(res) {
+    state = { solo: res.characters.length === 1, characters: res.characters, relationship: res.relationship || null, done: true };
+    renderLive(); finishButtons();
   }
 
   // ---------- PNG 저장 (지금 고른 디자인 그대로) ----------
