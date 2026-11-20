@@ -154,6 +154,30 @@
   .owl .g { text-align: right; font-weight: 800; width: 2.4em; color: var(--h); }
   .owl .g-P, .owl .g-D { color: var(--faint); }
   .c > .v + .n + .v { margin-top: 10px; }
+  /* 항목 수정 · 다시 해석 */
+  .item { position: relative; }
+  .tools { position: absolute; right: 0; top: 14px; display: none; gap: 4px; }
+  .sheet.editable .item:hover .tools, .sheet.editable .item:focus-within .tools, .sheet.editable .bond:hover .tools, .sheet.editable .bond:focus-within .tools, .sheet.editable.touch .tools { display: flex; }
+  .bond .tools { top: 30px; right: 36px; }
+  body.record .bond .tools { right: 0; }
+  .sheet.saving .tools { display: none !important; }
+  .tools button { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--fieldline); background: var(--field); color: var(--sub); display: grid; place-items: center; padding: 0; }
+  .tools button svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .tools button:hover { color: var(--ink); border-color: var(--h); }
+  .sheet.editable .item.has-tools .c, .sheet.editable .bond.has-tools .bt { padding-right: 64px; }
+  .ef { display: grid; gap: 6px; margin-top: 4px; }
+  .ef label { font-size: 12px; color: var(--faint); margin: 2px 0 0; }
+  .ef input, .ef textarea, .ef select { width: 100%; font: inherit; font-size: 14px; color: var(--ink); background: var(--field); border: 1px solid var(--fieldline); border-radius: 8px; padding: 7px 10px; }
+  .ef textarea { resize: vertical; min-height: 2.4em; }
+  .ef .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .ef .owlrow { display: grid; grid-template-columns: 1fr 72px; gap: 6px; }
+  .ef .row { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; align-items: center; }
+  .ef .row .btn { padding: 5px 12px; font-size: 12.5px; }
+  .ef .hp { display: flex; flex-wrap: wrap; gap: 6px; }
+  .ef .hp button { border: 1px solid var(--fieldline); background: var(--field); color: var(--sub); border-radius: 999px; padding: 3px 10px; font-size: 12.5px; font-weight: 600; }
+  .ef .hp button[aria-pressed=true] { background: var(--btn); color: #fff; border-color: var(--btn); }
+  .ef .err { font-size: 12.5px; color: #8a2f2f; }
+  .busy .c, .busy .bt { opacity: .45; }
   .ph { display: inline-block; height: .85em; vertical-align: middle; border-radius: 4px; background: var(--rule); opacity: .9; }
   .sheet.live .ph { animation: ph 1.4s ease-in-out infinite; }
   @keyframes ph { 0%, 100% { opacity: .45; } 50% { opacity: .95; } }
@@ -570,7 +594,7 @@
     if (JSON.stringify(base).length > 4_000_000) return fail('첨부 용량이 너무 큽니다. 이미지 수를 줄여 주세요.');
 
     streams.forEach((ac) => ac.abort()); streams = [];
-    state = { solo, characters: solo ? [{}] : [{}, {}], relationship: solo ? null : {}, done: false, names };
+    state = { solo, characters: solo ? [{}] : [{}, {}], relationship: solo ? null : {}, done: false, names, base, editing: null, busy: null };
     $('saves').innerHTML = ''; $('stage').innerHTML = '';
     $('remain').textContent = '모자가 생각하는 중입니다. 결과가 나오는 대로 채워집니다.';
     renderLive(); show(result);
@@ -637,8 +661,16 @@
     return (flagCache[h.c] = `url(${c.toDataURL('image/png')})`);
   }
 
-  function person(p) {
+  const ICON_PEN = '<svg viewBox="0 0 24 24"><path d="M4 20h4l10-10-4-4L4 16z"/><path d="M12 8l4 4"/></svg>';
+  const ICON_REDO = '<svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 5v6h-6"/></svg>';
+  const tools = (i, f) => (i !== -2 && state && state.done && !(state.editing || state.busy)) ? `<span class="tools"><button type="button" data-edit="${i}:${f}" title="직접 고치기" aria-label="직접 고치기">${ICON_PEN}</button><button type="button" data-redo="${i}:${f}" title="다시 해석" aria-label="다시 해석">${ICON_REDO}</button></span>` : '';
+  const isEditing = (i, f) => state && state.editing && state.editing.i === i && state.editing.f === f;
+  const isBusy = (i, f) => state && state.busy && state.busy.i === i && state.busy.f === f;
+  const itemCls = (i, f) => `item${isBusy(i, f) ? ' busy' : ''}${state && state.done ? ' has-tools' : ''}`;
+
+  function person(p, i) {
     p = (p && typeof p === 'object') ? p : {};
+    if (i === undefined) i = -1;
     const h = house(p.house), w = (p.wand && typeof p.wand === 'object') ? p.wand : {};
     const sa = stripe(h, 12, [['c', 18], ['c2', 6]]);
     const sb = stripe(h, 118, [['c', 26], ['c2', 8], ['c', 10], ['c2', 4]]);
@@ -654,24 +686,119 @@
           <div class="nm"><p class="house">${esc(h.en || 'SORTING')}</p><h3>${tx(p.name, 30)}</h3></div>
         </div>
         <div class="body">
-        <div class="item"><p class="t">기숙사 해석</p><div class="c"><p class="v plain">${tx(p.house_reason, 95)}</p>${p.house_evidence ? `<p class="q">근거 — ${esc(p.house_evidence)}</p>` : ''}</div></div>
-        <div class="item"><p class="t">모자가 망설인 기숙사</p><div class="c"><p class="v">${tx(p.alt_house, 25)}</p><p class="n">${tx(p.alt_reason, 85)}</p></div></div>
-        <div class="item"><p class="t">교복 입는 법</p><div class="c"><p class="v plain">${tx(p.uniform, 90)}</p><p class="n">${tx(p.uniform_note, 80)}</p></div></div>
-        <div class="item"><p class="t">잘하는 과목</p><div class="c"><p class="v">${tx(p.best_subject, 30)}</p><p class="n">${tx(p.best_reason, 80)}</p></div></div>
-        <div class="item"><p class="t">약한 과목</p><div class="c"><p class="v">${tx(p.weak_subject, 30)}</p><p class="n">${tx(p.weak_reason, 80)}</p></div></div>
-        <div class="item"><p class="t">습관</p><div class="c"><ul class="habits">${list(p.habits, 3, (x) => `<li>${tx(typeof x === 'string' ? x : '', 70)}</li>`)}</ul></div></div>
-        <div class="item"><p class="t">지팡이</p><div class="c"><p class="v">${w.wood ? `${esc(w.wood)} · ${tx(w.core, 20)} · ${tx(w.length, 12)} · ${tx(w.flexibility, 16)}` : tx('', 60)}</p>
-          <p class="n"><b>나무</b> — ${tx(w.wood_note, 75)}</p><p class="n"><b>심</b> — ${tx(w.core_note, 75)}</p><p class="n"><b>길이·유연성</b> — ${tx(w.build_note, 60)}</p></div></div>
-        <div class="item"><p class="t">O.W.L. 성적</p><div class="c"><table class="owl">${list(p.owls, 6, (o) => `<tr><td>${tx(o.subject, 55)}</td><td class="g g-${esc(o.grade || '')}">${tx(o.grade, 60)}</td></tr>`)}</table></div></div>
-        <div class="item"><p class="t">패트로누스</p><div class="c"><p class="v">${tx(p.patronus, 25)}</p><p class="n">${tx(p.patronus_reason, 85)}</p></div></div>
-        <div class="item"><p class="t">어몰텐시아</p><div class="c">${list(p.amortentia, 3, (a) => typeof a === 'string' ? `<p class="v">${esc(a)}</p>` : `<p class="v">${tx(a.scent, 40)}</p>${a.source ? `<p class="n">${esc(a.source)}</p>` : (a.scent ? '' : `<p class="n">${tx('', 70)}</p>`)}`)}</div></div>
-        <div class="item"><p class="t">졸업 후 직업</p><div class="c"><p class="v">${tx(p.career, 25)}</p><p class="n">${tx(p.career_reason, 85)}</p></div></div>
+        ${item(i, 'house', '기숙사 해석', `<p class="v plain">${tx(p.house_reason, 95)}</p>${p.house_evidence ? `<p class="q">근거 — ${esc(p.house_evidence)}</p>` : ''}`)}
+        ${item(i, 'alt', '모자가 망설인 기숙사', `<p class="v">${tx(p.alt_house, 25)}</p><p class="n">${tx(p.alt_reason, 85)}</p>`)}
+        ${item(i, 'uniform', '교복 입는 법', `<p class="v plain">${tx(p.uniform, 90)}</p><p class="n">${tx(p.uniform_note, 80)}</p>`)}
+        ${item(i, 'best', '잘하는 과목', `<p class="v">${tx(p.best_subject, 30)}</p><p class="n">${tx(p.best_reason, 80)}</p>`)}
+        ${item(i, 'weak', '약한 과목', `<p class="v">${tx(p.weak_subject, 30)}</p><p class="n">${tx(p.weak_reason, 80)}</p>`)}
+        ${item(i, 'habits', '습관', `<ul class="habits">${list(p.habits, 3, (x) => `<li>${tx(typeof x === 'string' ? x : '', 70)}</li>`)}</ul>`)}
+        ${item(i, 'wand', '지팡이', `<p class="v">${w.wood ? `${esc(w.wood)} · ${tx(w.core, 20)} · ${tx(w.length, 12)} · ${tx(w.flexibility, 16)}` : tx('', 60)}</p>
+          <p class="n"><b>나무</b> — ${tx(w.wood_note, 75)}</p><p class="n"><b>심</b> — ${tx(w.core_note, 75)}</p><p class="n"><b>길이·유연성</b> — ${tx(w.build_note, 60)}</p>`)}
+        ${item(i, 'owls', 'O.W.L. 성적', `<table class="owl">${list(p.owls, 6, (o) => `<tr><td>${tx(o.subject, 55)}</td><td class="g g-${esc(o.grade || '')}">${tx(o.grade, 60)}</td></tr>`)}</table>`)}
+        ${item(i, 'patronus', '패트로누스', `<p class="v">${tx(p.patronus, 25)}</p><p class="n">${tx(p.patronus_reason, 85)}</p>`)}
+        ${item(i, 'amortentia', '어몰텐시아', list(p.amortentia, 3, (a) => typeof a === 'string' ? `<p class="v">${esc(a)}</p>` : `<p class="v">${tx(a.scent, 40)}</p>${a.source ? `<p class="n">${esc(a.source)}</p>` : (a.scent ? '' : `<p class="n">${tx('', 70)}</p>`)}`))}
+        ${item(i, 'career', '졸업 후 직업', `<p class="v">${tx(p.career, 25)}</p><p class="n">${tx(p.career_reason, 85)}</p>`)}
         </div>
       </article>`;
   }
+  function item(i, f, title, inner) {
+    const body = isEditing(i, f) ? editForm(i, f) : `<div class="c">${inner}</div>${tools(i, f)}`;
+    return `<div class="${itemCls(i, f)}" data-item="${i}:${f}"><p class="t">${title}</p>${body}</div>`;
+  }
+
+  // ---------- 수정 폼 ----------
+  const HOUSE_NAMES = Object.keys(HOUSE);
+  const inp = (name, val, ph) => `<input name="${name}" value="${esc(val ?? '')}" placeholder="${ph || ''}">`;
+  const ta = (name, val, rows) => `<textarea name="${name}" rows="${rows || 2}">${esc(val ?? '')}</textarea>`;
+  const housePick = (name, val) => `<div class="hp" data-pick="${name}">${HOUSE_NAMES.map((h) => `<button type="button" data-h="${h}" aria-pressed="${val === h}">${h}</button>`).join('')}<input type="hidden" name="${name}" value="${esc(val || '')}"></div>`;
+  function editForm(i, f) {
+    const p = i < 0 ? (state.relationship || {}) : (state.characters[i] || {});
+    const w = p.wand || {};
+    let fields = '';
+    if (f === 'relationship') fields = `<label>한 줄 제목</label>${inp('headline', p.headline)}<label>요약</label>${ta('summary', p.summary, 3)}`;
+    else if (f === 'house') fields = `<label>기숙사</label>${housePick('house', p.house)}<label>해석</label>${ta('house_reason', p.house_reason, 3)}<label>근거</label>${inp('house_evidence', p.house_evidence)}`;
+    else if (f === 'alt') fields = `<label>망설인 기숙사</label>${housePick('alt_house', p.alt_house)}<label>이유</label>${ta('alt_reason', p.alt_reason)}`;
+    else if (f === 'uniform') fields = `<label>차림</label>${ta('uniform', p.uniform)}<label>해석</label>${ta('uniform_note', p.uniform_note)}`;
+    else if (f === 'best') fields = `<label>과목</label>${inp('best_subject', p.best_subject)}<label>이유</label>${ta('best_reason', p.best_reason)}`;
+    else if (f === 'weak') fields = `<label>과목</label>${inp('weak_subject', p.weak_subject)}<label>이유</label>${ta('weak_reason', p.weak_reason)}`;
+    else if (f === 'habits') fields = [0, 1, 2].map((k) => inp('habit' + k, (p.habits || [])[k])).join('');
+    else if (f === 'wand') fields = `<div class="grid">${inp('wood', w.wood, '나무')}${inp('core', w.core, '심')}${inp('length', w.length, '길이')}${inp('flexibility', w.flexibility, '유연성')}</div><label>나무</label>${ta('wood_note', w.wood_note)}<label>심</label>${ta('core_note', w.core_note)}<label>길이·유연성</label>${ta('build_note', w.build_note, 1)}`;
+    else if (f === 'owls') fields = [0, 1, 2, 3, 4, 5, 6, 7].map((k) => { const o = (p.owls || [])[k] || {}; return `<div class="owlrow">${inp('subj' + k, o.subject, k < 6 ? '과목' : '과목 (선택)')}<select name="grade${k}">${['', 'O', 'E', 'A', 'P', 'D'].map((g) => `<option value="${g}"${o.grade === g ? ' selected' : ''}>${g || '-'}</option>`).join('')}</select></div>`; }).join('');
+    else if (f === 'patronus') fields = `<label>동물</label>${inp('patronus', p.patronus)}<label>이유</label>${ta('patronus_reason', p.patronus_reason, 3)}`;
+    else if (f === 'amortentia') fields = [0, 1, 2].map((k) => { const a = (p.amortentia || [])[k]; const o = typeof a === 'string' ? { scent: a } : (a || {}); return `${inp('scent' + k, o.scent, '냄새')}${ta('source' + k, o.source, 1)}`; }).join('');
+    else if (f === 'career') fields = `<label>직업</label>${inp('career', p.career)}<label>이유</label>${ta('career_reason', p.career_reason, 3)}`;
+    return `<form class="ef" data-form="${i}:${f}">${fields}<div class="row"><button type="submit" class="btn primary">저장</button><button type="button" class="btn" data-cancel>취소</button></div></form>`;
+  }
+  function readForm(form, f) {
+    const g = (n) => { const el = form.elements[n]; return el ? el.value.trim() : ''; };
+    if (f === 'relationship') return { headline: g('headline'), summary: g('summary') };
+    if (f === 'house') return { house: g('house'), house_reason: g('house_reason'), house_evidence: g('house_evidence') };
+    if (f === 'alt') return { alt_house: g('alt_house'), alt_reason: g('alt_reason') };
+    if (f === 'uniform') return { uniform: g('uniform'), uniform_note: g('uniform_note') };
+    if (f === 'best') return { best_subject: g('best_subject'), best_reason: g('best_reason') };
+    if (f === 'weak') return { weak_subject: g('weak_subject'), weak_reason: g('weak_reason') };
+    if (f === 'habits') return { habits: [0, 1, 2].map((k) => g('habit' + k)).filter(Boolean) };
+    if (f === 'wand') return { wand: { wood: g('wood'), core: g('core'), length: g('length'), flexibility: g('flexibility'), wood_note: g('wood_note'), core_note: g('core_note'), build_note: g('build_note') } };
+    if (f === 'owls') return { owls: [0, 1, 2, 3, 4, 5, 6, 7].map((k) => ({ subject: g('subj' + k), grade: g('grade' + k) })).filter((o) => o.subject && o.grade) };
+    if (f === 'patronus') return { patronus: g('patronus'), patronus_reason: g('patronus_reason') };
+    if (f === 'amortentia') return { amortentia: [0, 1, 2].map((k) => ({ scent: g('scent' + k), source: g('source' + k) })).filter((a) => a.scent) };
+    if (f === 'career') return { career: g('career'), career_reason: g('career_reason') };
+    return {};
+  }
+  function applyPatch(i, patch) {
+    if (i < 0) state.relationship = { ...(state.relationship || {}), ...patch };
+    else state.characters[i] = { ...(state.characters[i] || {}), ...patch };
+  }
+
+  // ---------- 다시 해석 ----------
+  async function redo(i, f) {
+    const cur = i < 0 ? (state.relationship || {}) : (state.characters[i] || {});
+    let note = '', house = '';
+    if (f === 'house') {
+      const pick = window.prompt('기숙사를 정해 두고 다시 해석하려면 이름을 적으세요. (그리핀도르 / 후플푸프 / 래번클로 / 슬리데린)\n비워 두면 모자가 다시 고릅니다.', '');
+      if (pick === null) return;
+      house = HOUSE_NAMES.find((h) => pick.trim() === h) || '';
+      if (pick.trim() && !house) note = pick.trim();
+    } else {
+      const n = window.prompt('원하는 방향이 있으면 적어 주세요. (비워 두면 다른 방향으로 다시 씁니다)', '');
+      if (n === null) return;
+      note = n.trim();
+    }
+    state.busy = { i, f }; renderLive();
+    try {
+      const r = await fetch('/api/sort', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...state.base, part: 'redo', field: f, index: Math.max(0, i), current: cur, note, house }) });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok || !data.patch) throw new Error(data.error || '다시 해석하지 못했습니다. 잠시 후 다시 시도해 주세요.');
+      applyPatch(i, data.patch);
+    } catch (err) {
+      $('remain').textContent = err.message === 'Failed to fetch' ? '서버에 연결하지 못했습니다.' : err.message;
+    } finally {
+      state.busy = null; renderLive(); finishButtons();
+    }
+  }
+
+  // 카드 안의 버튼·폼 처리 (한 번만 붙이고 위임)
+  $('sheet').addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b || !state || !state.done) return;
+    if (b.dataset.edit) { const [i, f] = b.dataset.edit.split(':'); state.editing = { i: Number(i), f }; renderLive(); const el = $('sheet').querySelector('form.ef input, form.ef textarea'); if (el) el.focus(); return; }
+    if (b.dataset.redo) { const [i, f] = b.dataset.redo.split(':'); redo(Number(i), f); return; }
+    if (b.hasAttribute('data-cancel')) { state.editing = null; renderLive(); return; }
+    if (b.dataset.h && b.closest('.hp')) { const hp = b.closest('.hp'); hp.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); hp.querySelector('input').value = b.dataset.h; }
+  });
+  $('sheet').addEventListener('submit', (e) => {
+    const form = e.target.closest('form.ef'); if (!form) return;
+    e.preventDefault();
+    const [i, f] = form.dataset.form.split(':');
+    applyPatch(Number(i), readForm(form, f));
+    state.editing = null; renderLive(); finishButtons();
+  });
+  // 터치 기기에서는 도구 버튼을 항상 보이게
+  const TOUCH = !!(window.matchMedia && window.matchMedia('(hover: none)').matches);
+
   function soloSheet(el, p) {
     el.className = 'sheet solo';
-    el.innerHTML = `<div class="frame"><div class="cols">${person(p)}</div></div>`;
+    el.innerHTML = `<div class="frame"><div class="cols">${person(p, el === $('sheet') ? 0 : -2)}</div></div>`;
     el.dataset.file = fname(`${(p && p.name) || '인물'}_기숙사배정`);
   }
   function pairSheet(el, chars, rel) {
@@ -679,9 +806,9 @@
     const na = (a && a.name) || (rel.names && rel.names[0]), nb = (b && b.name) || (rel.names && rel.names[1]);
     el.className = 'sheet';
     el.innerHTML = `<div class="frame">
-      <div class="bond"><div class="bt"><p class="pn">${tx(na, 12)} × ${tx(nb, 12)}</p><h2>${tx(rel.headline, 40)}</h2><p class="sum">${tx(rel.summary, 90)}</p></div>
+      <div class="bond${isBusy(-1, 'relationship') ? ' busy' : ''}${state && state.done ? ' has-tools' : ''}" style="position:relative">${isEditing(-1, 'relationship') ? `<div class="bt">${editForm(-1, 'relationship')}</div>` : `<div class="bt"><p class="pn">${tx(na, 12)} × ${tx(nb, 12)}</p><h2>${tx(rel.headline, 40)}</h2><p class="sum">${tx(rel.summary, 90)}</p></div>${tools(-1, 'relationship')}`}
         <div class="orn" aria-hidden="true"><i></i><b></b><i></i></div><p class="doc">HOGWARTS<br>SORTING RECORD</p></div>
-      <div class="cols">${person(a)}${person(b)}</div></div>`;
+      <div class="cols">${person(a, 0)}${person(b, 1)}</div></div>`;
     el.dataset.file = fname(`${na || '인물1'}_${nb || '인물2'}_기숙사배정`);
   }
 
@@ -689,9 +816,11 @@
   function renderLive() {
     if (!state) return;
     const sheet = $('sheet');
-    sheet.classList.toggle('live', !state.done);
     if (state.solo) soloSheet(sheet, state.characters[0]);
     else pairSheet(sheet, state.characters, state.relationship);
+    sheet.classList.toggle('live', !state.done);
+    sheet.classList.toggle('editable', !!state.done);
+    sheet.classList.toggle('touch', TOUCH);
   }
   function finishButtons() {
     const sheet = $('sheet'), stage = $('stage'), saves = $('saves');
@@ -712,15 +841,17 @@
   }
   // 미리보기 등에서 완성 결과를 한 번에 그릴 때
   function render(res) {
-    state = { solo: res.characters.length === 1, characters: res.characters, relationship: res.relationship || null, done: true };
+    state = { solo: res.characters.length === 1, characters: res.characters, relationship: res.relationship || null, done: true, base: { job: 'demo', mode: res.characters.length === 1 ? 'solo' : 'pair', text: '', names: [], houses: [], images: [] }, editing: null, busy: null };
     renderLive(); finishButtons();
   }
 
   // ---------- PNG 저장 (지금 고른 디자인 그대로) ----------
   async function save(btn, sheet) {
     if (!window.html2canvas) { $('remain').textContent = '저장 기능을 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.'; return; }
+    if (state && state.editing) { $('remain').textContent = '수정 중인 항목을 먼저 저장하거나 취소해 주세요.'; return; }
     const label = btn.textContent;
     btn.disabled = true; btn.textContent = '저장하는 중';
+    sheet.classList.add('saving');
     try {
       if (document.fonts && document.fonts.ready) await document.fonts.ready;
       sheet.style.borderRadius = '0'; sheet.style.boxShadow = 'none';
@@ -740,7 +871,7 @@
       setTimeout(() => URL.revokeObjectURL(url), 10000);
     } catch (_) {
       $('remain').textContent = '이미지를 만들지 못했습니다. 다시 시도해 주세요.';
-    } finally { sheet.style.borderRadius = ''; sheet.style.boxShadow = ''; btn.disabled = false; btn.textContent = label; }
+    } finally { sheet.classList.remove('saving'); sheet.style.borderRadius = ''; sheet.style.boxShadow = ''; btn.disabled = false; btn.textContent = label; }
   }
 
   // ---------- 미리보기 : ?demo=1 (페어) / ?demo=solo (1인), &theme=tie — API 없이 화면만 확인 ----------

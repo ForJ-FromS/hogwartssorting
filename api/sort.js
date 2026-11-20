@@ -111,6 +111,22 @@ const RELATION_TOOL = {
   },
 };
 
+// ---------- 다시 해석할 수 있는 항목 묶음 ----------
+const FIELD_GROUPS = {
+  house: ['house', 'house_reason', 'house_evidence'],
+  alt: ['alt_house', 'alt_reason'],
+  uniform: ['uniform', 'uniform_note'],
+  best: ['best_subject', 'best_reason'],
+  weak: ['weak_subject', 'weak_reason'],
+  habits: ['habits'],
+  wand: ['wand'],
+  owls: ['owls'],
+  patronus: ['patronus', 'patronus_reason'],
+  amortentia: ['amortentia'],
+  career: ['career', 'career_reason'],
+};
+const GROUP_LABEL = { house: '기숙사와 해석', alt: '모자가 망설인 기숙사', uniform: '교복 입는 법', best: '잘하는 과목', weak: '약한 과목', habits: '습관', wand: '지팡이', owls: 'O.W.L. 성적', patronus: '패트로누스', amortentia: '어몰텐시아', career: '졸업 후 직업', relationship: '두 사람의 관계' };
+
 // ---------- 결과 점검 ----------
 // 모양이 어긋난 값은 고치고, 빠진 항목 목록을 돌려줍니다.
 function normalizeCharacter(r) {
@@ -190,7 +206,7 @@ module.exports = async function handler(req, res) {
   }
 
   const body = typeof req.body === 'string' ? safeParse(req.body) : req.body || {};
-  const part = body.part === 'relationship' ? 'relationship' : 'character';
+  const part = body.part === 'relationship' ? 'relationship' : (body.part === 'redo' ? 'redo' : 'character');
   const solo = body.mode === 'solo';
   const index = body.index === 1 ? 1 : 0;
   const text = String(body.text || '').slice(0, MAX_TEXT).trim();
@@ -233,6 +249,69 @@ module.exports = async function handler(req, res) {
     return res.status(503).json({ error: '잠시 후 다시 시도해 주세요.' });
   }
   const refund = async () => { if (firstOfJob) { await decr(ipKey); await decr(allKey); } };
+
+  // ---------- 항목 다시 해석 (비스트리밍, 작업당 12회까지) ----------
+  if (part === 'redo') {
+    const group = String(body.field || '');
+    const isRel = group === 'relationship';
+    if (!isRel && !FIELD_GROUPS[group]) return res.status(400).json({ error: '다시 해석할 수 없는 항목입니다.' });
+    const current = (body.current && typeof body.current === 'object') ? body.current : {};
+    const note = String(body.note || '').slice(0, 300).trim();
+    const forcedHouse = HOUSES.includes(body.house) ? body.house : '';
+    try {
+      const n = await incr(`sort:job:${jobId}:redo`);
+      if (n > 12) return res.status(429).json({ error: '이 결과에서 다시 해석할 수 있는 횟수를 다 썼습니다.' });
+    } catch (_) {}
+
+    const keys = isRel ? ['headline', 'summary'] : FIELD_GROUPS[group];
+    const srcProps = isRel ? RELATION_TOOL.input_schema.properties : CHARACTER.properties;
+    const props = {}; for (const k of keys) props[k] = srcProps[k];
+    const redoTool = { name: 'redo_fields', description: '지정한 항목만 다시 씁니다.', input_schema: { type: 'object', properties: props, required: keys } };
+
+    const who = isRel ? '두 인물의 관계' : `「${current.name || (index === 0 ? '자료에 먼저 등장하는 인물' : '자료에 두 번째로 등장하는 인물')}」`;
+    const ask = [
+      `${who}의 ${GROUP_LABEL[group]} 항목만 다시 씁니다. 다른 항목은 그대로 둡니다.`,
+      '지금 쓴 내용과는 다른 방향으로 다시 해석합니다. 같은 결론을 말만 바꿔 되풀이하지 않습니다.',
+    ];
+    if (group === 'house' && forcedHouse) ask.push(`기숙사는 ${forcedHouse}로 정합니다. 왜 그 기숙사인지를 자료를 근거로 해석합니다.`);
+    if (group === 'house' && !forcedHouse) ask.push('기숙사는 바꿔도, 유지해도 됩니다. 유지한다면 해석과 근거는 새로 씁니다.');
+    if (!isRel && current.house && group !== 'house') ask.push(`이 인물은 ${current.house} 소속입니다. 이에 맞게 씁니다.`);
+    if (note) ask.push(`사용자 요청: ${note}`);
+    ask.push('반드시 redo_fields 도구로만 답합니다.');
+
+    const content = [
+      ...images.map((im) => ({ type: 'image', source: { type: 'base64', media_type: im.media_type, data: im.data } })),
+      { type: 'text', text: `아래는 자료입니다.\n\n<자료>\n${text || '(텍스트 없음 — 이미지 참고)'}\n</자료>` },
+    ];
+    try {
+      const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({
+          model: MODEL, max_tokens: 4000, system: SYSTEM,
+          messages: [
+            { role: 'user', content },
+            { role: 'assistant', content: [{ type: 'text', text: '작성한 결과:\n' + JSON.stringify(current) }] },
+            { role: 'user', content: ask.join('\n') },
+          ],
+          tools: [redoTool], tool_choice: { type: 'auto' },
+        }),
+      });
+      if (!r.ok) {
+        const detail = await r.text(); console.error('redo error', r.status, detail.slice(0, 300));
+        return res.status(502).json({ error: r.status === 429 || r.status === 529 ? '지금 요청이 몰려 있습니다. 잠시 후 다시 시도해 주세요.' : '다시 해석하지 못했습니다. 잠시 후 다시 시도해 주세요.' });
+      }
+      const d = await r.json();
+      const b = (d.content || []).find((x) => x.type === 'tool_use');
+      if (!b || !b.input) return res.status(502).json({ error: '결과를 읽지 못했습니다. 다시 시도해 주세요.' });
+      let patch = b.input;
+      if (!isRel) { const n = normalizeCharacter({ ...current, ...patch }); patch = {}; for (const k of keys) patch[k] = n.fixed[k]; }
+      return res.status(200).json({ patch });
+    } catch (e) {
+      console.error('redo failed', e);
+      return res.status(502).json({ error: '다시 해석하지 못했습니다. 잠시 후 다시 시도해 주세요.' });
+    }
+  }
 
   // ---------- 지시문 ----------
   const lines = [];
