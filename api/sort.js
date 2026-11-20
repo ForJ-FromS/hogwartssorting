@@ -110,6 +110,26 @@ const RELATION_TOOL = {
   },
 };
 
+// ---------- 결과 점검 ----------
+// 모양이 어긋난 값은 고치고, 빠진 항목 목록을 돌려줍니다.
+function normalizeCharacter(r) {
+  if (!r || typeof r !== 'object') return { fixed: {}, missing: CHARACTER.required.slice() };
+  const out = { ...r };
+  const str = (v) => (typeof v === 'string' ? v.trim() : (v == null ? '' : String(v)));
+  if (Array.isArray(out.habits)) out.habits = out.habits.map((h) => (typeof h === 'string' ? h : (h && (h.text || h.habit)) || '')).filter(Boolean);
+  if (Array.isArray(out.amortentia)) out.amortentia = out.amortentia.map((a) => (typeof a === 'string' ? { scent: a, source: '' } : (a && typeof a === 'object' ? { scent: str(a.scent || a.name), source: str(a.source || a.reason) } : null))).filter((a) => a && a.scent);
+  if (Array.isArray(out.owls)) out.owls = out.owls.map((o) => (o && typeof o === 'object' ? { subject: str(o.subject), grade: str(o.grade).toUpperCase().slice(0, 1) } : null)).filter((o) => o && o.subject && /^[OEAPD]$/.test(o.grade));
+  if (out.wand && typeof out.wand !== 'object') delete out.wand;
+  const missing = [];
+  for (const k of CHARACTER.required) {
+    const v = out[k];
+    if (k === 'habits' || k === 'owls' || k === 'amortentia') { if (!Array.isArray(v) || v.length === 0) missing.push(k); }
+    else if (k === 'wand') { const w = v || {}; if (CHARACTER.properties.wand.required.some((kk) => !str(w[kk]))) missing.push(k); }
+    else if (!str(v)) missing.push(k);
+  }
+  return { fixed: out, missing };
+}
+
 // ---------- 횟수 제한 ----------
 // Upstash(Vercel KV) 환경변수가 있으면 정확하게, 없으면 인스턴스 메모리로 대략 셉니다.
 const mem = new Map();
@@ -304,6 +324,36 @@ module.exports = async function handler(req, res) {
       await refund();
       send({ error: stop === 'max_tokens' ? '결과가 너무 길어 끊겼습니다. 다시 시도해 주세요.' : '결과를 읽지 못했습니다. 다시 시도해 주세요.' });
       return res.end();
+    }
+    if (part === 'character') {
+      let { fixed, missing } = normalizeCharacter(result);
+      if (missing.length) {
+        console.warn('character missing fields, filling', missing.join(','), 'stop=' + stop);
+        try {
+          const props = {}; for (const k of missing) props[k] = CHARACTER.properties[k];
+          const fillTool = { name: 'fill_fields', description: '빠진 항목만 채웁니다.', input_schema: { type: 'object', properties: props, required: missing } };
+          const r2 = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+            body: JSON.stringify({
+              model: MODEL, max_tokens: 6000, system: SYSTEM,
+              messages: [
+                { role: 'user', content },
+                { role: 'assistant', content: [{ type: 'text', text: '작성한 결과:\n' + JSON.stringify(fixed) }] },
+                { role: 'user', content: `위 결과에서 다음 항목이 비어 있습니다: ${missing.join(', ')}. 같은 인물 기준으로 이 항목들만 fill_fields 도구로 채워 주세요. 이미 쓴 내용과 어긋나지 않게 씁니다.` },
+              ],
+              tools: [fillTool], tool_choice: { type: 'auto' },
+            }),
+          });
+          if (r2.ok) {
+            const d2 = await r2.json();
+            const b2 = (d2.content || []).find((b) => b.type === 'tool_use');
+            if (b2 && b2.input) { const n2 = normalizeCharacter({ ...fixed, ...b2.input }); fixed = n2.fixed; missing = n2.missing; }
+          } else console.error('fill error', r2.status, (await r2.text()).slice(0, 300));
+        } catch (e) { console.error('fill failed', e); }
+        if (missing.length) console.error('still missing after fill', missing.join(','));
+      }
+      result = fixed;
     }
     send({ done: true, result, remaining: Math.max(0, PER_IP_DAILY - (used || 0)) });
     return res.end();

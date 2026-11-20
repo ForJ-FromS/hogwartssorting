@@ -664,7 +664,7 @@
           <p class="n"><b>나무</b> — ${tx(w.wood_note, 75)}</p><p class="n"><b>심</b> — ${tx(w.core_note, 75)}</p><p class="n"><b>길이·유연성</b> — ${tx(w.build_note, 60)}</p></div></div>
         <div class="item"><p class="t">O.W.L. 성적</p><div class="c"><table class="owl">${list(p.owls, 6, (o) => `<tr><td>${tx(o.subject, 55)}</td><td class="g g-${esc(o.grade || '')}">${tx(o.grade, 60)}</td></tr>`)}</table></div></div>
         <div class="item"><p class="t">패트로누스</p><div class="c"><p class="v">${tx(p.patronus, 25)}</p><p class="n">${tx(p.patronus_reason, 85)}</p></div></div>
-        <div class="item"><p class="t">어몰텐시아</p><div class="c">${list(p.amortentia, 3, (a) => `<p class="v">${tx(a.scent, 40)}</p><p class="n">${tx(a.source, 70)}</p>`)}</div></div>
+        <div class="item"><p class="t">어몰텐시아</p><div class="c">${list(p.amortentia, 3, (a) => typeof a === 'string' ? `<p class="v">${esc(a)}</p>` : `<p class="v">${tx(a.scent, 40)}</p>${a.source ? `<p class="n">${esc(a.source)}</p>` : (a.scent ? '' : `<p class="n">${tx('', 70)}</p>`)}`)}</div></div>
         <div class="item"><p class="t">졸업 후 직업</p><div class="c"><p class="v">${tx(p.career, 25)}</p><p class="n">${tx(p.career_reason, 85)}</p></div></div>
         </div>
       </article>`;
