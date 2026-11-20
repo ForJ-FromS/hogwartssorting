@@ -19,7 +19,7 @@
   }
   p { margin: 0; }
   [hidden] { display: none !important; }
-  button { font: inherit; cursor: pointer; }
+  button { font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
   .wrap { max-width: 1000px; margin: 0 auto; padding: 48px 20px 80px; }
 
   /* 테마 색 — 양피지(A) */
@@ -116,7 +116,7 @@
 
   /* OOC 지침 */
   .ooc { margin-top: 16px; padding: 0; }
-  .ooc summary { cursor: pointer; padding: 16px 24px; font-weight: 700; font-size: 14px; list-style: none; display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; }
+  .ooc summary { cursor: pointer; -webkit-tap-highlight-color: transparent; outline: none; padding: 16px 24px; font-weight: 700; font-size: 14px; list-style: none; display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; }
   .ooc summary::-webkit-details-marker { display: none; }
   .ooc summary::before { content: ''; display: inline-block; width: 7px; height: 7px; border-right: 1.5px solid var(--sub); border-bottom: 1.5px solid var(--sub); transform: rotate(-45deg); margin-right: 2px; transition: transform .15s; }
   .ooc[open] summary::before { transform: rotate(45deg); }
@@ -624,10 +624,18 @@
       sheet.style.borderRadius = '0'; sheet.style.boxShadow = 'none';
       const bg = SAVE_BG[document.body.className] || '#ffffff';
       const canvas = await html2canvas(sheet, { scale: 2, backgroundColor: bg, useCORS: true });
+      const name = (sheet.dataset.file || 'hogwarts-sorting') + '.png';
+      const blob = await new Promise((res) => canvas.toBlob(res, 'image/png'));
+      // 휴대폰: 공유 창을 띄워 「이미지 저장」으로 바로 사진첩에 넣을 수 있게. 안 되면 내려받기.
+      const file = new File([blob], name, { type: 'image/png' });
+      const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      if (mobile && navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        try { await navigator.share({ files: [file] }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
+      }
+      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.download = (sheet.dataset.file || 'hogwarts-sorting') + '.png';
-      a.href = canvas.toDataURL('image/png');
-      a.click();
+      a.download = name; a.href = url; a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
     } catch (_) {
       $('remain').textContent = '이미지를 만들지 못했습니다. 다시 시도해 주세요.';
     } finally { sheet.style.borderRadius = ''; sheet.style.boxShadow = ''; btn.disabled = false; btn.textContent = label; }
