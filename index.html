@@ -181,6 +181,7 @@
   .bond .tools { top: 30px; right: 36px; }
   body.record .bond .tools { right: 0; }
   .sheet.saving .tools { display: none !important; }
+  .sheet.editable.saving .item.has-tools .c, .sheet.editable.saving .bond.has-tools .bt { padding-right: 0; }
   .tools button { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--fieldline); background: var(--field); color: var(--sub); display: grid; place-items: center; padding: 0; }
   .tools button svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
   .tools button:hover { color: var(--ink); border-color: var(--h); }
@@ -909,7 +910,8 @@
     const bg = SAVE_BG[document.body.className] || '#ffffff';
     sheet.classList.add('saving'); sheet.style.borderRadius = '0'; sheet.style.boxShadow = 'none';
     try {
-      const canvas = await html2canvas(sheet, { scale: 2, backgroundColor: bg, useCORS: true });
+      // 휴대폰에서도 PC 배치로 찍히게, 넓은 창에서 그린 것처럼 렌더합니다.
+      const canvas = await html2canvas(sheet, { scale: 2, backgroundColor: bg, useCORS: true, windowWidth: 1200, windowHeight: 1600, scrollX: 0, scrollY: 0 });
       const blob = await new Promise((res) => canvas.toBlob(res, 'image/png'));
       return new File([blob], (sheet.dataset.file || 'hogwarts-sorting') + '.png', { type: 'image/png' });
     } finally { sheet.classList.remove('saving'); sheet.style.borderRadius = ''; sheet.style.boxShadow = ''; }
