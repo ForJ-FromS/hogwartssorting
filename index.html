@@ -663,7 +663,7 @@
 
   const ICON_PEN = '<svg viewBox="0 0 24 24"><path d="M4 20h4l10-10-4-4L4 16z"/><path d="M12 8l4 4"/></svg>';
   const ICON_REDO = '<svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 5v6h-6"/></svg>';
-  const tools = (i, f) => (i !== -2 && state && state.done && !(state.editing || state.busy)) ? `<span class="tools"><button type="button" data-edit="${i}:${f}" title="직접 고치기" aria-label="직접 고치기">${ICON_PEN}</button><button type="button" data-redo="${i}:${f}" title="다시 해석" aria-label="다시 해석">${ICON_REDO}</button></span>` : '';
+  const tools = (i, f) => (i !== -2 && state && state.done && !state.busy) ? `<span class="tools"><button type="button" data-edit="${i}:${f}" title="직접 고치기" aria-label="직접 고치기">${ICON_PEN}</button><button type="button" data-redo="${i}:${f}" title="다시 해석" aria-label="다시 해석">${ICON_REDO}</button></span>` : '';
   const isEditing = (i, f) => state && state.editing && state.editing.i === i && state.editing.f === f;
   const isBusy = (i, f) => state && state.busy && state.busy.i === i && state.busy.f === f;
   const itemCls = (i, f) => `item${isBusy(i, f) ? ' busy' : ''}${state && state.done ? ' has-tools' : ''}`;
@@ -696,7 +696,7 @@
           <p class="n"><b>나무</b> — ${tx(w.wood_note, 75)}</p><p class="n"><b>심</b> — ${tx(w.core_note, 75)}</p><p class="n"><b>길이·유연성</b> — ${tx(w.build_note, 60)}</p>`)}
         ${item(i, 'owls', 'O.W.L. 성적', `<table class="owl">${list(p.owls, 6, (o) => `<tr><td>${tx(o.subject, 55)}</td><td class="g g-${esc(o.grade || '')}">${tx(o.grade, 60)}</td></tr>`)}</table>`)}
         ${item(i, 'patronus', '패트로누스', `<p class="v">${tx(p.patronus, 25)}</p><p class="n">${tx(p.patronus_reason, 85)}</p>`)}
-        ${item(i, 'amortentia', '어몰텐시아', list(p.amortentia, 3, (a) => typeof a === 'string' ? `<p class="v">${esc(a)}</p>` : `<p class="v">${tx(a.scent, 40)}</p>${a.source ? `<p class="n">${esc(a.source)}</p>` : (a.scent ? '' : `<p class="n">${tx('', 70)}</p>`)}`))}
+        ${item(i, 'amortentia', '아모텐시아', list(p.amortentia, 3, (a) => typeof a === 'string' ? `<p class="v">${esc(a)}</p>` : `<p class="v">${tx(a.scent, 40)}</p>${a.source ? `<p class="n">${esc(a.source)}</p>` : (a.scent ? '' : `<p class="n">${tx('', 70)}</p>`)}`))}
         ${item(i, 'career', '졸업 후 직업', `<p class="v">${tx(p.career, 25)}</p><p class="n">${tx(p.career_reason, 85)}</p>`)}
         </div>
       </article>`;
@@ -745,6 +745,13 @@
     if (f === 'career') return { career: g('career'), career_reason: g('career_reason') };
     return {};
   }
+  // 열려 있는 수정 폼이 있으면 그 내용을 저장합니다 (다른 걸 누를 때 고친 게 날아가지 않게)
+  function commitOpenForm() {
+    if (!state || !state.editing) return;
+    const form = $('sheet').querySelector('form.ef');
+    if (form) applyPatch(Number(form.dataset.form.split(':')[0]), readForm(form, form.dataset.form.split(':')[1]));
+    state.editing = null;
+  }
   function applyPatch(i, patch) {
     if (i < 0) state.relationship = { ...(state.relationship || {}), ...patch };
     else state.characters[i] = { ...(state.characters[i] || {}), ...patch };
@@ -781,10 +788,15 @@
   // 카드 안의 버튼·폼 처리 (한 번만 붙이고 위임)
   $('sheet').addEventListener('click', (e) => {
     const b = e.target.closest('button'); if (!b || !state || !state.done) return;
-    if (b.dataset.edit) { const [i, f] = b.dataset.edit.split(':'); state.editing = { i: Number(i), f }; renderLive(); const el = $('sheet').querySelector('form.ef input, form.ef textarea'); if (el) el.focus(); return; }
-    if (b.dataset.redo) { const [i, f] = b.dataset.redo.split(':'); redo(Number(i), f); return; }
-    if (b.hasAttribute('data-cancel')) { state.editing = null; renderLive(); return; }
-    if (b.dataset.h && b.closest('.hp')) { const hp = b.closest('.hp'); hp.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); hp.querySelector('input').value = b.dataset.h; }
+    if (b.dataset.edit) { commitOpenForm(); const [i, f] = b.dataset.edit.split(':'); const cur = Number(i) < 0 ? state.relationship : state.characters[Number(i)]; state.editing = { i: Number(i), f, backup: JSON.parse(JSON.stringify(cur || {})) }; renderLive(); const el = $('sheet').querySelector('form.ef input, form.ef textarea'); if (el) el.focus(); return; }
+    if (b.dataset.redo) { commitOpenForm(); const [i, f] = b.dataset.redo.split(':'); redo(Number(i), f); return; }
+    if (b.hasAttribute('data-cancel')) { const ed = state.editing; if (ed && ed.backup) { if (ed.i < 0) state.relationship = ed.backup; else state.characters[ed.i] = ed.backup; } state.editing = null; renderLive(); finishButtons(); return; }
+    if (b.dataset.h && b.closest('.hp')) { const hp = b.closest('.hp'); hp.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); hp.querySelector('input').value = b.dataset.h; const form = b.closest('form.ef'); if (form) applyPatch(Number(form.dataset.form.split(':')[0]), readForm(form, form.dataset.form.split(':')[1])); }
+  });
+  $('sheet').addEventListener('input', (e) => {
+    const form = e.target.closest('form.ef'); if (!form || !state) return;
+    const [i, f] = form.dataset.form.split(':');
+    applyPatch(Number(i), readForm(form, f));   // 그리지는 않고 값만 담아 둠
   });
   $('sheet').addEventListener('submit', (e) => {
     const form = e.target.closest('form.ef'); if (!form) return;
@@ -848,7 +860,7 @@
   // ---------- PNG 저장 (지금 고른 디자인 그대로) ----------
   async function save(btn, sheet) {
     if (!window.html2canvas) { $('remain').textContent = '저장 기능을 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.'; return; }
-    if (state && state.editing) { $('remain').textContent = '수정 중인 항목을 먼저 저장하거나 취소해 주세요.'; return; }
+    if (state && state.editing) { commitOpenForm(); renderLive(); finishButtons(); }
     const label = btn.textContent;
     btn.disabled = true; btn.textContent = '저장하는 중';
     sheet.classList.add('saving');
