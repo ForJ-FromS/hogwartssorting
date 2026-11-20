@@ -7,6 +7,7 @@ const GLOBAL_DAILY = parseInt(process.env.DAILY_LIMIT_TOTAL || '150', 10);
 const REDO_DAILY = parseInt(process.env.DAILY_REDO_PER_IP || '40', 10);
 const MAX_TEXT = 24000; // 자료 글자 수 상한
 const MAX_IMAGES = 4;
+const MAX_IMAGES_RESUME = 10; // 이어 쓰기: 예전 카드 이미지를 잘게 나눠 보내므로 넉넉히
 
 const KV_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
 const KV_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
@@ -124,6 +125,13 @@ const RELATION_TOOL = {
   },
 };
 
+// ---------- 이어 쓰기: 예전 결과 카드 이미지가 함께 올 때 ----------
+const RESUME_NOTE = `[이어 쓰기] 첨부한 이미지 중에는 이 인물(들)의 예전 배정 결과 카드가 있습니다. 긴 카드를 여러 조각으로 나눈 것이니 이어서 읽습니다.
+- 카드에서 이 인물의 항목을 찾아, 이미 적혀 있는 항목은 문구를 고치거나 다듬지 말고 그대로 옮겨 적습니다. 기숙사, 망설인 기숙사, 교복, 과목, 습관, 지팡이 등이 모두 해당합니다.
+- 카드에 없거나 읽을 수 없는 항목(예: 보가트, O.W.L. 성적, 아모텐시아, 패트로누스, 졸업 후 직업)만 자료와 카드 내용을 근거로 새로 씁니다. 새로 쓰는 항목은 카드에 적힌 기존 해석과 어긋나지 않게 씁니다.
+- 카드의 문체가 이 지침과 달라도 기존 항목은 카드 문구를 우선합니다.`;
+const RESUME_NOTE_REL = `[이어 쓰기] 첨부한 이미지 중에는 예전 배정 결과 카드가 있습니다. 카드에 두 사람의 관계 제목·요약이 있으면 그대로 옮겨 적고, 없는 항목(기숙사 점수 장면 등)만 새로 씁니다.`;
+
 // ---------- 다시 해석할 수 있는 항목 묶음 ----------
 const FIELD_GROUPS = {
   house: ['house', 'house_reason', 'house_evidence'],
@@ -220,7 +228,8 @@ module.exports = async function handler(req, res) {
   }
 
   const body = typeof req.body === 'string' ? safeParse(req.body) : req.body || {};
-  const part = body.part === 'relationship' ? 'relationship' : (body.part === 'redo' ? 'redo' : 'character');
+  const part = ['relationship', 'redo', 'en'].includes(body.part) ? body.part : 'character';
+  const resume = body.resume === true;
   const solo = body.mode === 'solo';
   const index = body.index === 1 ? 1 : 0;
   const text = String(body.text || '').slice(0, MAX_TEXT).trim();
@@ -228,12 +237,12 @@ module.exports = async function handler(req, res) {
     .map((n) => String(n || '').slice(0, 40).trim());
   const houses = (Array.isArray(body.houses) ? body.houses : []).slice(0, solo ? 1 : 2)
     .map((h) => (HOUSES.includes(h) ? h : ''));
-  const images = (Array.isArray(body.images) ? body.images : []).slice(0, MAX_IMAGES).filter(
+  const images = (Array.isArray(body.images) ? body.images : []).slice(0, resume ? MAX_IMAGES_RESUME : MAX_IMAGES).filter(
     (im) => im && /^image\/(jpeg|png|webp|gif)$/.test(im.media_type) && typeof im.data === 'string' && im.data.length > 0
   );
   const jobId = String(body.job || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 40);
 
-  if (text.length < 30 && images.length === 0) {
+  if (part !== 'en' && text.length < 30 && images.length === 0) {
     return res.status(400).json({ error: '자료가 너무 짧습니다. 설정을 조금 더 넣어 주세요.' });
   }
   if (!jobId) return res.status(400).json({ error: '요청 형식이 잘못되었습니다. 새로고침 후 다시 시도해 주세요.' });
@@ -245,8 +254,8 @@ module.exports = async function handler(req, res) {
   const allKey = `sort:${day}:all`;
   let used, firstOfJob = false;
   try {
-    if (part === 'redo') {
-      // 다시 해석은 하루 배정 횟수와 따로 셉니다.
+    if (part === 'redo' || part === 'en') {
+      // 다시 해석·영문 변환은 하루 배정 횟수와 따로 셉니다.
       const n = await incr(`sort:${day}:redo:${ip}`);
       if (n > REDO_DAILY) return res.status(429).json({ error: `다시 해석은 하루 ${REDO_DAILY}회까지입니다. 내일 다시 이용해 주세요.` });
       used = await getCount(ipKey);
@@ -270,6 +279,41 @@ module.exports = async function handler(req, res) {
     return res.status(503).json({ error: '잠시 후 다시 시도해 주세요.' });
   }
   const refund = async () => { if (firstOfJob) { await decr(ipKey); await decr(allKey); } };
+
+  // ---------- 학생증 영문 변환 (비스트리밍) ----------
+  if (part === 'en') {
+    const people = (Array.isArray(body.people) ? body.people : []).slice(0, 2).map((p) => ({
+      name: String(p.name || '').slice(0, 40), patronus: String(p.patronus || '').slice(0, 60),
+      wood: String(p.wood || '').slice(0, 40), core: String(p.core || '').slice(0, 40),
+    }));
+    if (!people.length) return res.status(400).json({ error: '변환할 내용이 없습니다.' });
+    const enTool = {
+      name: 'english_fields', description: '학생증에 들어갈 영문 표기를 기록합니다.',
+      input_schema: { type: 'object', properties: { people: { type: 'array', minItems: people.length, maxItems: people.length, items: { type: 'object', properties: {
+        name: str('영문 이름. 한국어 이름은 국어의 로마자 표기법으로, 이름 성 순서(예: 한서윤 → Seoyun Han). 이미 로마자면 그대로.'),
+        patronus: str('패트로누스 동물의 영어 이름. 예: Raven, Otter'),
+        wood: str('지팡이 나무의 해리 포터 원작 영문 표기. 예: Beech, Hawthorn, Holly'),
+        core: str('지팡이 심의 원작 영문 표기: Phoenix feather / Dragon heartstring / Unicorn hair'),
+      }, required: ['name', 'patronus', 'wood', 'core'] } } }, required: ['people'] },
+    };
+    try {
+      const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({ model: MODEL, max_tokens: 800,
+          messages: [{ role: 'user', content: '다음 학생증 항목을 영문으로 옮겨 english_fields 도구로 답하세요. 순서를 지킵니다.\n' + JSON.stringify(people) }],
+          tools: [enTool], tool_choice: { type: 'auto' } }),
+      });
+      if (!r.ok) { console.error('en error', r.status, (await r.text()).slice(0, 300)); return res.status(502).json({ error: '영문으로 바꾸지 못했습니다. 잠시 후 다시 시도해 주세요.' }); }
+      const d = await r.json();
+      const b = (d.content || []).find((x) => x.type === 'tool_use');
+      if (!b || !b.input || !Array.isArray(b.input.people)) return res.status(502).json({ error: '영문으로 바꾸지 못했습니다. 다시 시도해 주세요.' });
+      return res.status(200).json({ people: b.input.people });
+    } catch (e) {
+      console.error('en failed', e);
+      return res.status(502).json({ error: '영문으로 바꾸지 못했습니다. 잠시 후 다시 시도해 주세요.' });
+    }
+  }
 
   // ---------- 항목 다시 해석 (비스트리밍, 결과당 15회 · IP당 하루 40회) ----------
   if (part === 'redo') {
@@ -339,6 +383,7 @@ module.exports = async function handler(req, res) {
   let tool;
   if (part === 'relationship') {
     tool = RELATION_TOOL;
+    if (resume) lines.push(RESUME_NOTE_REL);
     lines.push('자료에 있는 두 인물의 호그와트 안 관계만 정리합니다. 개별 프로필은 쓰지 않습니다.');
     lines.push('points 에는 두 사람이 함께 기숙사 점수를 받은 장면 두 개를 씁니다. 하나는 가점, 하나는 감점. 두 사람의 관계와 성격이 드러나는 구체적인 장면으로, 원작 교수진 가운데 그 상황에 어울리는 사람이 점수를 줍니다.');
     if (names.some(Boolean)) lines.push(`인물 이름: ${names.map((n, i) => n || `(자료에서 ${i + 1}번째로 등장하는 인물)`).join(' / ')}`);
@@ -351,6 +396,7 @@ module.exports = async function handler(req, res) {
       : `자료에는 두 인물이 있습니다. 이번에는 ${who} 한 명만 정리합니다. 다른 인물은 관계를 이해하는 참고로만 쓰고, 그 인물의 외형·성격·소지품을 섞지 않습니다.`);
     if (!solo && names.some(Boolean)) lines.push(`두 인물의 이름: ${names.map((n, i) => n || `(자료에서 ${i + 1}번째로 등장하는 인물)`).join(' / ')}`);
     if (houses[index]) lines.push(`이 인물의 기숙사는 ${houses[index]}로 지정됨. 이 기숙사로 배정하고 그 이유를 해석할 것.`);
+    if (resume) lines.push(RESUME_NOTE);
   }
   const content = [
     ...images.map((im) => ({ type: 'image', source: { type: 'base64', media_type: im.media_type, data: im.data } })),

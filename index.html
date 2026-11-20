@@ -123,6 +123,12 @@
     background: rgba(255, 255, 255, .3);
   }
   .drop.over { border-color: var(--gold); background: rgba(255, 255, 255, .7); }
+  .modebar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .tgl { border: 1px dashed var(--fieldline); background: transparent; color: var(--sub); border-radius: 999px; padding: 7px 14px; font-weight: 600; font-size: 13px; }
+  .tgl[aria-pressed=true] { border-style: solid; border-color: #8a6a3a; background: #f7f1e4; color: #6b4f22; }
+  .tgl[aria-pressed=true]::before { content: '✓ '; }
+  .resumebox { margin-top: 14px; padding: 12px 14px; border-radius: 10px; background: #f7f1e4; color: #5d4a2a; font-size: 13.5px; line-height: 1.65; }
+  .files li .n2 { color: var(--faint); font-size: 12px; }
   .files { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
   .files li { display: flex; align-items: center; gap: 8px; background: var(--field); border: 1px solid var(--fieldline); border-radius: 999px; padding: 4px 6px 4px 12px; font-size: 13px; }
   .files li button { border: 0; background: var(--qbg); color: var(--sub); width: 22px; height: 22px; border-radius: 50%; font-size: 13px; line-height: 1; padding: 0; }
@@ -272,32 +278,56 @@
   .s2 .r i { flex: none; width: 62px; font-style: normal; color: #9a8f82; font-size: 11.5px; padding-top: 1px; }
   .s2 .r b { font-weight: 600; }
   .s2 .sign { position: absolute; bottom: -4px; left: 0; right: 0; font-size: 13px; color: #8a7f72; }
-  /* 3 학생증 */
-  .sq.s3 { background: linear-gradient(135deg, #e3e9f4 0%, #f3e6e8 55%, #efe9dc 100%); padding: 28px; }
-  .s3 .hdr { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; gap: 12px; }
-  .s3 .hdr .ttl { font-size: 20px; letter-spacing: .05em; white-space: nowrap; }
-  .s3 .hdr .hl3 { font-size: 14px; font-weight: 800; text-align: right; }
-  .s3 .id { height: 212px; background: #fff; border-radius: 14px; box-shadow: 0 14px 26px -18px rgba(30,40,60,.55); display: flex; overflow: hidden; margin-bottom: 12px; position: relative; }
-  .s3 .lb { width: 132px; flex: none; background: var(--sb) center / cover, var(--h); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; position: relative; }
-  .s3 .lb .big { font-family: 'IM Fell English SC', serif; font-size: 62px; line-height: 1; text-shadow: 0 2px 8px rgba(0,0,0,.3); }
-  .s3 .lb .hn { font-family: 'IM Fell English SC', serif; font-size: 12px; letter-spacing: .14em; text-shadow: 0 1px 4px rgba(0,0,0,.4); }
-  .s3 .lb.photo { justify-content: flex-end; padding: 0; }
-  .s3 .lb .ph2 { position: absolute; inset: 8px 8px 30px; border-radius: 6px; background-size: 100% 100%; background-position: center; box-shadow: 0 0 0 2px rgba(255,255,255,.85); }
-  .s3 .lb.photo .hn { position: relative; padding: 0 0 8px; }
-  .s3 .rt { flex: 1; padding: 14px 22px 12px 18px; display: flex; flex-direction: column; min-width: 0; }
-  .s3 .rt .meta { display: flex; justify-content: space-between; font-family: 'Plex Mono', monospace; font-size: 10px; letter-spacing: .1em; color: #8a92a3; }
-  .s3 .rt .nm3 { font-size: 24px; font-weight: 800; letter-spacing: -.01em; margin: 2px 0 6px; }
-  .s3 .f { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; }
-  .s3 .f p { font-size: 13px; font-weight: 700; line-height: 1.3; }
-  .s3 .f p i { display: block; font-style: normal; font-family: 'Plex Mono', monospace; font-weight: 400; font-size: 9.5px; letter-spacing: .1em; color: #8a92a3; }
-  .s3 .holo { position: absolute; right: 0; top: 0; bottom: 0; width: 10px; background: linear-gradient(180deg, #cfe0ff, #f6d6ec, #d6f3e3, #fbedc9, #cfe0ff); }
-  .s3.one .id { height: 300px; }
-  .s3.one .lb { width: 186px; }
-  .s3.one .lb .big { font-size: 84px; }
-  .s3.one .rt .nm3 { font-size: 30px; margin-bottom: 10px; }
-  .s3.one .f { gap: 10px 16px; }
-  .s3.one .f p { font-size: 14px; }
-  .s3.one .why { background: rgba(255,255,255,.7); border-radius: 12px; padding: 12px 16px; font-size: 13.5px; line-height: 1.6; color: #4a3d30; max-height: 128px; overflow: hidden; }
+  /* ===== 학생증 공통 (어두운 톤) ===== */
+  .sq.s3, .sq.s4 { background: radial-gradient(ellipse at 50% 0%, #262a33 0%, #121419 70%); color: #eee5d0; }
+  .idl { font-family: 'Plex Mono', monospace; font-size: 7.5px; letter-spacing: .12em; color: #b39a63; display: block; line-height: 1.2; }
+  .idv { font-size: 12.5px; font-weight: 700; line-height: 1.25; color: #f1e9d6; display: block; }
+  .idph { background: #3a3f4b center / 100% 100% no-repeat; position: relative; overflow: hidden; }
+  .idph.empty { display: grid; place-items: center; color: rgba(216,185,104,.55); font-family: 'IM Fell English SC', serif; font-size: 44px; }
+  /* 3 목걸이 명찰 */
+  .s3 .bd { position: absolute; top: 40px; width: 232px; height: 440px; border-radius: 14px; background: var(--dk); overflow: hidden; box-shadow: 0 18px 34px -16px rgba(0,0,0,.8), 0 0 0 1px rgba(216,185,104,.3); }
+  .s3 .lan { position: absolute; top: -10px; width: 22px; height: 60px; background: var(--sb) center / cover, var(--h); border-radius: 3px; box-shadow: 0 2px 6px rgba(0,0,0,.35); }
+  .s3 .btop { height: 140px; background: var(--sb) center / cover, var(--h); position: relative; }
+  .s3 .slot { position: absolute; left: 50%; top: 12px; margin-left: -22px; width: 44px; height: 9px; border-radius: 5px; background: #121419; }
+  .s3 .sch { position: absolute; left: 0; right: 0; top: 30px; text-align: center; color: #fff; font-family: 'IM Fell English SC', serif; font-size: 11.5px; letter-spacing: .12em; text-shadow: 0 1px 4px rgba(0,0,0,.5); }
+  .s3 .bph { position: absolute; left: 50%; top: 56px; margin-left: -59px; width: 118px; height: 150px; border-radius: 8px; border: 4px solid #e9dfc8; box-shadow: 0 6px 14px -6px rgba(0,0,0,.6); }
+  .s3 .binfo { position: absolute; left: 0; right: 0; top: 218px; text-align: center; padding: 0 18px; }
+  .s3 .bnm { font-size: 24px; font-weight: 800; letter-spacing: -.01em; color: #f1e9d6; line-height: 1.25; }
+  .s3 .bhs { font-family: 'IM Fell English SC', serif; font-size: 13.5px; letter-spacing: .16em; color: var(--h2); }
+  .s3 .bgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; text-align: left; margin-top: 14px; }
+  .s3 .bgrid .w { grid-column: 1 / -1; }
+  .s3 .bfoot { position: absolute; left: 0; right: 0; bottom: 0; height: 38px; background: #0d0f13; border-top: 1px solid rgba(216,185,104,.35); display: flex; align-items: center; justify-content: space-between; padding: 0 14px; }
+  .s3 .bfoot .no { font-family: 'Plex Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #cdb67a; }
+  .s3 .bfoot img { height: 18px; width: 84px; background: #fff; border-radius: 2px; padding: 2px; }
+  .s3.one .bd { left: 144px; top: 36px; width: 252px; height: 470px; }
+  .s3.one .lan { left: 259px; }
+  .s3.one .bph { width: 132px; height: 168px; margin-left: -66px; }
+  .s3.one .binfo { top: 236px; }
+  .s3.one .bnm { font-size: 27px; }
+  /* 4 클래식 */
+  .s4 .cd { position: absolute; left: 62px; width: 416px; height: 262px; border-radius: 10px; background: #1b1d23; overflow: hidden; border: 6px solid #2c2f37; box-shadow: 0 18px 34px -16px rgba(0,0,0,.85); }
+  .s4 .shine { position: absolute; inset: 0; background: linear-gradient(115deg, rgba(255,255,255,0) 30%, rgba(255,255,255,.09) 42%, rgba(255,255,255,0) 52%); }
+  .s4 .strip { position: absolute; left: 0; top: 0; bottom: 0; width: 12px; background: var(--sb) center / cover, var(--h); }
+  .s4 .ct { position: absolute; left: 28px; right: 16px; top: 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid #d8b968; padding-bottom: 6px; }
+  .s4 .ct .sn { font-family: 'IM Fell English SC', serif; font-size: 14px; letter-spacing: .05em; color: #efe6d2; }
+  .s4 .ct .sn i { font-family: 'IM Fell English', serif; font-size: 11px; color: #9a8a66; }
+  .s4 .ct .yr { font-family: 'Plex Mono', monospace; font-size: 8.5px; letter-spacing: .16em; color: #9a8a66; }
+  .s4 .cph { position: absolute; left: 28px; top: 52px; width: 96px; height: 124px; border: 1px solid rgba(216,185,104,.5); }
+  .s4 .cst { position: absolute; left: 82px; top: 132px; width: 58px; height: 58px; }
+  .s4 .rows { position: absolute; left: 146px; right: 16px; top: 50px; }
+  .s4 .crow { display: grid; grid-template-columns: 64px 1fr; align-items: baseline; border-bottom: 1px dotted rgba(216,185,104,.3); padding: 4px 0; }
+  .s4 .crow .idv { font-size: 12.5px; }
+  .s4 .crow.big .idv { font-size: 18px; font-weight: 800; }
+  .s4 .sig { position: absolute; left: 28px; bottom: 12px; font-family: 'IM Fell English', serif; font-style: italic; font-size: 13px; color: #e9dfc8; }
+  .s4 .sig small { font-family: 'Plex Mono', monospace; font-style: normal; font-size: 6.5px; letter-spacing: .14em; color: #8f7d55; display: block; }
+  .s4 .cno { position: absolute; right: 16px; bottom: 12px; font-family: 'Plex Mono', monospace; font-size: 15px; letter-spacing: .14em; color: #d8b968; font-weight: 600; }
+  .s4.one .cd { left: 30px; top: 116px; width: 480px; height: 302px; }
+  .s4.one .cph { width: 112px; height: 144px; }
+  .s4.one .cst { left: 96px; top: 150px; }
+  .s4.one .rows { left: 162px; top: 54px; }
+  .s4.one .crow { padding: 6px 0; }
+  .s4.one .crow .idv { font-size: 14px; }
+  .s4.one .crow.big .idv { font-size: 21px; }
   /* 요약 카드 고르기·사진·미리보기 */
   .sqpanel { margin-top: 26px; padding: 20px 24px; background: #fff; border-radius: 12px; box-shadow: 0 16px 34px -28px rgba(40,30,20,.45); display: grid; grid-template-columns: 1fr auto; gap: 18px; align-items: start; }
   .sqpanel h3 { margin: 0 0 4px; font-size: 15px; font-weight: 800; }
@@ -307,6 +337,23 @@
   .photos .pr2 .thumb { width: 36px; height: 52px; border-radius: 4px; background: var(--qbg) center / cover; border: 1px solid var(--fieldline); flex: none; }
   .photos .pr2 .btn { padding: 5px 12px; font-size: 12.5px; }
   .photos .note { font-size: 12px; color: var(--faint); }
+  .pe { position: fixed; inset: 0; z-index: 50; background: rgba(15,17,22,.55); display: grid; place-items: center; padding: 16px;
+    --ink: #2b2118; --sub: #5d5245; --faint: #9a8f82; --field: #fff; --fieldline: #e3ded4; --btn: #2b2118; --gold: #b08d4f; }
+  .pewin { width: min(420px, 100%); background: #fff; border-radius: 14px; padding: 20px; box-shadow: 0 30px 60px -20px rgba(0,0,0,.5); color: var(--ink); }
+  .pewin h3 { margin: 0 0 2px; font-size: 16px; font-weight: 800; }
+  .pesub { font-size: 12.5px; color: var(--sub); margin: 0 0 12px; }
+  .pestage { position: relative; height: 330px; border-radius: 10px; background: #23262e; overflow: hidden; touch-action: none; cursor: grab; user-select: none; }
+  .pestage:active { cursor: grabbing; }
+  .pestage img { position: absolute; max-width: none; pointer-events: none; }
+  .peframe { position: absolute; width: 210px; height: 270px; border: 2px solid #fff; border-radius: 4px; box-shadow: 0 0 0 999px rgba(20,22,28,.6); pointer-events: none;
+    background: linear-gradient(90deg, transparent calc(33.3% - .5px), rgba(255,255,255,.35) calc(33.3% - .5px), rgba(255,255,255,.35) calc(33.3% + .5px), transparent calc(33.3% + .5px), transparent calc(66.6% - .5px), rgba(255,255,255,.35) calc(66.6% - .5px), rgba(255,255,255,.35) calc(66.6% + .5px), transparent calc(66.6% + .5px)),
+                linear-gradient(180deg, transparent calc(33.3% - .5px), rgba(255,255,255,.35) calc(33.3% - .5px), rgba(255,255,255,.35) calc(33.3% + .5px), transparent calc(33.3% + .5px), transparent calc(66.6% - .5px), rgba(255,255,255,.35) calc(66.6% - .5px), rgba(255,255,255,.35) calc(66.6% + .5px), transparent calc(66.6% + .5px)); }
+  .pehint { position: absolute; left: 0; right: 0; bottom: 8px; margin: 0; text-align: center; font-size: 11.5px; color: #cfd3da; pointer-events: none; }
+  .pectl { display: flex; align-items: center; gap: 12px; margin-top: 14px; font-size: 12.5px; color: var(--sub); }
+  .pectl input { flex: 1; accent-color: #2b2118; }
+  .pebtns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+  .pebtns .btn { padding: 7px 16px; font-size: 13px; }
+  .langbar { display: flex; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
   .sqprev { width: 270px; height: 270px; overflow: hidden; border-radius: 8px; box-shadow: 0 10px 24px -16px rgba(0,0,0,.45); }
   .sqprev > div { transform: scale(.5); transform-origin: 0 0; }
   @media (max-width: 680px) { .sqpanel { grid-template-columns: 1fr; } .sqprev { margin: 0 auto; } }
@@ -460,9 +507,15 @@
   <!-- 입력 -->
   <form id="form" class="panel" novalidate>
     <div class="tk"><p class="l">Hogwarts Express<small>One way · London to Hogsmeade</small></p><span class="stamp">Admit One</span></div>
-    <div class="seg" id="mode" role="group" aria-label="배정 방식">
-      <button type="button" data-mode="pair" aria-pressed="true">페어</button>
-      <button type="button" data-mode="solo" aria-pressed="false">1인</button>
+    <div class="modebar">
+      <div class="seg" id="mode" role="group" aria-label="배정 방식">
+        <button type="button" data-mode="pair" aria-pressed="true">페어</button>
+        <button type="button" data-mode="solo" aria-pressed="false">1인</button>
+      </div>
+      <button type="button" class="tgl" id="resume" aria-pressed="false">이전 결과 이어 쓰기</button>
+    </div>
+    <div class="resumebox" id="resumebox" hidden>
+      <b>예전에 저장한 결과 카드 이미지</b>와 <b>원래 자료</b>를 함께 넣어 주세요. 카드에 이미 있는 내용은 그대로 옮기고, 그때 없던 항목(보가트, O.W.L. 성적, 기숙사 점수 등)만 새로 채웁니다. 긴 카드 이미지는 자동으로 나눠서 읽습니다.
     </div>
     <div class="names" id="names">
       <div>
@@ -483,7 +536,7 @@
 
     <div class="drop" id="drop">
       <button type="button" class="btn" id="pick">파일 첨부</button>
-      <span>txt · md 파일은 본문에 이어 붙고, 이미지는 최대 4장까지 함께 읽습니다. 여기에 끌어다 놓아도 됩니다.</span>
+      <span id="dropnote">txt · md 파일은 본문에 이어 붙고, 이미지는 최대 4장까지 함께 읽습니다. 여기에 끌어다 놓아도 됩니다.</span>
       <input type="file" id="file" multiple hidden accept=".txt,.md,text/plain,text/markdown,image/png,image/jpeg,image/webp">
     </div>
     <ul class="files" id="files"></ul>
@@ -557,7 +610,15 @@
         <div class="seg" id="sqstyle" role="group" aria-label="요약 카드 모양">
           <button type="button" data-sq="s1" aria-pressed="true">대출 카드</button>
           <button type="button" data-sq="s2" aria-pressed="false">통지서</button>
-          <button type="button" data-sq="s3" aria-pressed="false">학생증</button>
+          <button type="button" data-sq="s3" aria-pressed="false">학생증 · 명찰</button>
+          <button type="button" data-sq="s4" aria-pressed="false">학생증 · 클래식</button>
+        </div>
+        <div class="langbar" id="langbar" hidden>
+          <div class="seg" id="lang" role="group" aria-label="학생증 표기">
+            <button type="button" data-lang="ko" aria-pressed="true">한글</button>
+            <button type="button" data-lang="en" aria-pressed="false">English</button>
+          </div>
+          <span class="hint" id="langnote"></span>
         </div>
         <div class="photos" id="photos" hidden></div>
       </div>
@@ -565,6 +626,17 @@
     </div>
     <div id="stage" aria-hidden="true"></div>
   </section>
+</div>
+
+<!-- 사진 맞추기 창 -->
+<div class="pe" id="pe" hidden role="dialog" aria-modal="true" aria-label="사진 맞추기">
+  <div class="pewin">
+    <h3>사진 맞추기</h3>
+    <p class="pesub">사진을 끌어서 위치를 옮기고, 슬라이더로 크기를 조절하세요.</p>
+    <div class="pestage" id="pestage"><img id="peimg" alt="" draggable="false"><div class="peframe" id="peframe"></div><p class="pehint">드래그로 이동 · 두 손가락이나 휠로 확대</p></div>
+    <div class="pectl"><span>축소</span><input type="range" id="pezoom" min="1" max="4" step="0.01" value="1" aria-label="확대"><span>확대</span></div>
+    <div class="pebtns"><button type="button" class="btn" id="pereset">처음으로</button><button type="button" class="btn" id="pecancel">취소</button><button type="button" class="btn primary" id="peapply">적용</button></div>
+  </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
@@ -578,7 +650,10 @@
     '래번클로':   { en: 'RAVENCLAW',  c: '#22375e', c2: '#a2723f', cd: '#121f37', soft: '#d8dfec' },
     '후플푸프':   { en: 'HUFFLEPUFF', c: '#c99a22', c2: '#2a2522', cd: '#8a6812', soft: '#f3e6c4' },
   };
-  const MAX_IMAGES = 4, MAX_TEXT = 24000;
+  const MAX_IMAGES = 4, MAX_IMAGES_RESUME = 10, MAX_TEXT = 24000;
+  let resume = false;
+  const imageLimit = () => (resume ? MAX_IMAGES_RESUME : MAX_IMAGES);
+  const partCount = () => images.reduce((n, im) => n + im.parts.length, 0);
   let images = [];
 
   const form = $('form'), wait = $('wait'), result = $('result'), errorBox = $('error');
@@ -644,9 +719,11 @@
     errorBox.hidden = true;
     for (const f of list) {
       if (f.type.startsWith('image/')) {
-        if (images.length >= MAX_IMAGES) { fail(`이미지는 ${MAX_IMAGES}장까지 첨부할 수 있습니다.`); continue; }
-        try { images.push({ name: f.name, ...(await shrink(f)) }); }
-        catch (_) { fail(`${f.name} 파일을 읽지 못했습니다.`); }
+        try {
+          const parts = resume ? await slice(f) : [await shrink(f)];
+          if (partCount() + parts.length > imageLimit()) { fail(resume ? `이미지 조각이 ${MAX_IMAGES_RESUME}개를 넘습니다. 카드 이미지를 줄여 주세요.` : `이미지는 ${MAX_IMAGES}장까지 첨부할 수 있습니다.`); continue; }
+          images.push({ name: f.name, parts });
+        } catch (_) { fail(`${f.name} 파일을 읽지 못했습니다.`); }
       } else if (/\.(txt|md)$/i.test(f.name) || f.type.startsWith('text/')) {
         const t = await f.text();
         const joined = (text.value ? text.value.trimEnd() + '\n\n' : '') + t.trim();
@@ -678,10 +755,40 @@
       img.src = url;
     });
   }
+  // 이어 쓰기: 긴 결과 카드 이미지는 글자가 읽히도록 폭 1100px 로 맞추고 세로 1500px 씩 겹쳐 자릅니다.
+  function slice(file) {
+    return new Promise((resolve, reject) => {
+      const img = new Image(), url = URL.createObjectURL(file);
+      img.onload = () => {
+        const sc = Math.min(1, 1100 / img.width), W = Math.round(img.width * sc), Ht = Math.round(img.height * sc);
+        const TILE = 1500, OVER = 60, out = [];
+        for (let y = 0; y < Ht; y += TILE - OVER) {
+          const h = Math.min(TILE, Ht - y);
+          const c = document.createElement('canvas'); c.width = W; c.height = h;
+          const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, h);
+          ctx.drawImage(img, 0, y / sc, img.width, h / sc, 0, 0, W, h);
+          out.push({ media_type: 'image/jpeg', data: c.toDataURL('image/jpeg', 0.8).split(',')[1] });
+          if (y + h >= Ht) break;
+        }
+        URL.revokeObjectURL(url); resolve(out);
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(); };
+      img.src = url;
+    });
+  }
   function renderFiles() {
     $('files').innerHTML = images.map((im, i) =>
-      `<li>${esc(im.name)}<button type="button" data-i="${i}" aria-label="${esc(im.name)} 삭제">×</button></li>`).join('');
+      `<li>${esc(im.name)}${im.parts.length > 1 ? ` <span class="n2">${im.parts.length}조각</span>` : ''}<button type="button" data-i="${i}" aria-label="${esc(im.name)} 삭제">×</button></li>`).join('');
   }
+  $('resume').addEventListener('click', () => {
+    resume = !resume;
+    $('resume').setAttribute('aria-pressed', String(resume));
+    $('resumebox').hidden = !resume;
+    $('dropnote').textContent = resume
+      ? '예전 결과 카드 이미지(PNG)와 자료 파일을 넣어 주세요. 긴 이미지는 나눠서 읽습니다. 여기에 끌어다 놓아도 됩니다.'
+      : 'txt · md 파일은 본문에 이어 붙고, 이미지는 최대 4장까지 함께 읽습니다. 여기에 끌어다 놓아도 됩니다.';
+    $('go').textContent = resume ? '빈 항목 채우기' : '기숙사 배정하기';
+  });
   $('files').addEventListener('click', (e) => {
     const i = e.target.dataset && e.target.dataset.i;
     if (i !== undefined) { images.splice(Number(i), 1); renderFiles(); }
@@ -755,7 +862,7 @@
     const solo = mode === 'solo';
     const names = solo ? [$('n1').value.trim()] : [$('n1').value.trim(), $('n2').value.trim()];
     const houses = solo ? [$('h1').dataset.value] : [$('h1').dataset.value, $('h2').dataset.value];
-    const base = { mode, names, houses, text: text.value.trim(), images: images.map(({ media_type, data }) => ({ media_type, data })), job: jobId() };
+    const base = { mode, names, houses, resume, text: text.value.trim(), images: images.flatMap((im) => im.parts), job: jobId() };
     if (base.text.length < 30 && !images.length) return fail('자료가 너무 짧습니다. 설정을 조금 더 넣어 주세요.');
     if (JSON.stringify(base).length > 4_000_000) return fail('첨부 용량이 너무 큽니다. 이미지 수를 줄여 주세요.');
 
@@ -1053,16 +1160,16 @@
     persist();
   }
 
-  // ---------- 트위터용 정사각형 요약 카드 (s1 대출 카드 / s2 통지서 / s3 학생증) ----------
+  // ---------- 트위터용 정사각형 요약 카드 (s1 대출 카드 / s2 통지서 / s3 학생증 명찰 / s4 학생증 클래식) ----------
   let sqStyle = 's1';
-  try { const v = localStorage.getItem('sorting-sq'); if (['s1', 's2', 's3'].includes(v)) sqStyle = v; } catch (_) {}
+  try { const v = localStorage.getItem('sorting-sq'); if (['s1', 's2', 's3', 's4'].includes(v)) sqStyle = v; } catch (_) {}
   const HL = { '그리핀도르': '#f3d7b1', '슬리데린': '#d9dee2', '래번클로': '#e8c9a0', '후플푸프': '#2a2522' };
   const firstScent = (p) => Array.isArray(p.amortentia) && p.amortentia[0] ? (typeof p.amortentia[0] === 'string' ? p.amortentia[0] : p.amortentia[0].scent) : '';
   const wandShort = (p) => { const w = p.wand || {}; return [w.wood, w.core].filter(Boolean).join(' · '); };
   function squareCard(el, style) {
     style = style || sqStyle;
     const chars = state.characters, rel = state.relationship || {}, one = state.solo;
-    const hv = (p) => { const h = house(p.house); return `--h:${h.c};--h2:${h.c2};--hd:${h.cd};--hl:${HL[p.house] || '#f3d7b1'};--sb:${stripe(h, 300, [['c', 26], ['c2', 8], ['c', 10], ['c2', 4]])}`; };
+    const hv = (p) => { const h = house(p.house); return `--h:${h.c};--h2:${h.c2};--hd:${h.cd};--dk:${DK[p.house] || '#1a1d24'};--hl:${HL[p.house] || '#f3d7b1'};--sb:${stripe(h, 300, [['c', 26], ['c2', 8], ['c', 10], ['c2', 4]])}`; };
     const en = (p) => esc(house(p.house).en || '');
     const names = chars.map((p) => esc(p.name || '')).join(' × ');
     let html = '';
@@ -1087,32 +1194,104 @@
             ${rows.map(([t, fn]) => `<p class="r"><i>${t}</i><b>${esc(fn(p) || '')}</b></p>`).join('')}</div>`).join('')}</div>
           <p class="sign ital">Yours sincerely, The Sorting Hat</p></div></div>`;
     } else {
+      // 학생증: 직업은 빼고 이름·기숙사·학년·패트로누스·지팡이만
       const photos = state.photos || [];
-      html = `<div class="hdr"><p class="ttl fell">Hogwarts Student ID</p><p class="hl3">${one ? '' : esc(rel.headline || '')}</p></div>
-        ${chars.map((p, i) => `<div class="id" style="${hv(p)}">
-          <div class="lb${photos[i] ? ' photo' : ''}">${photos[i] ? `<div class="ph2" style="background-image:url(${photos[i]})"></div>` : `<span class="big">${en(p).slice(0, 1)}</span>`}<span class="hn">${en(p)}</span></div>
-          <div class="rt"><p class="meta mono"><span>STUDENT · YEAR 5</span><span>NO. 09${31 + i}</span></p><p class="nm3">${esc(p.name || '')}</p>
-            <div class="f"><p><i>PATRONUS</i>${esc(p.patronus || '')}</p><p><i>WAND</i>${esc(wandShort(p))}</p><p><i>BOGGART</i>${esc(p.boggart || '')}</p><p><i>CAREER</i>${esc(p.career || '')}</p>${one ? `<p><i>BEST SUBJECT</i>${esc(p.best_subject || '')}</p><p><i>AMORTENTIA</i>${esc(firstScent(p))}</p>` : ''}</div></div>
-          <div class="holo"></div></div>`).join('')}
-        ${one ? `<p class="why">${esc(chars[0].house_reason || '')}</p>` : ''}`;
+      const ph = (i, cls) => photos[i] ? `<div class="idph ${cls}" style="background-image:url(${photos[i]})"></div>` : `<div class="idph empty ${cls}">${en(chars[i]).slice(0, 1)}</div>`;
+      const no = (i) => `1992-09${31 + i}`;
+      if (style === 's3') {
+        const lefts = one ? [null] : [28, 280];
+        html = chars.map((p, i) => { const t = idText(p, i); return `
+          <div class="lan" style="${hv(p)};${one ? '' : `left:${lefts[i] + 110}px`}"></div>
+          <div class="bd" style="${hv(p)};${one ? '' : `left:${lefts[i]}px`}">
+            <div class="btop"><span class="slot"></span><p class="sch">Hogwarts School</p></div>${ph(i, 'bph')}
+            <div class="binfo"><p class="bnm">${esc(t.name)}</p><p class="bhs">${esc(t.house)}</p>
+              <div class="bgrid"><p><span class="idl">PATRONUS</span><span class="idv">${esc(t.patronus)}</span></p><p><span class="idl">YEAR</span><span class="idv">${esc(t.year)}</span></p>
+              <p class="w"><span class="idl">WAND</span><span class="idv">${esc(t.wand)}</span></p></div></div>
+            <div class="bfoot"><span class="no">NO. ${no(i)}</span><img alt="" src="${barcodeURL(31 + i * 7, 80, 14)}"></div>
+          </div>`; }).join('');
+      } else {
+        const tops = one ? [null] : [14, 272];
+        html = chars.map((p, i) => { const t = idText(p, i); return `
+          <div class="cd" style="${hv(p)};${one ? '' : `top:${tops[i]}px`}"><div class="strip"></div>
+            <div class="ct"><span class="sn">Hogwarts School <i>of Witchcraft and Wizardry</i></span><span class="yr">1991–1992</span></div>
+            ${ph(i, 'cph')}<img class="cst" alt="" src="${sealStamp()}">
+            <div class="rows"><div class="crow big"><span class="idl">NAME</span><span class="idv">${esc(t.name)}</span></div>
+              <div class="crow"><span class="idl">HOUSE</span><span class="idv" style="color:#d8b968">${esc(t.house)}</span></div>
+              <div class="crow"><span class="idl">YEAR</span><span class="idv">${esc(t.year)}</span></div>
+              <div class="crow"><span class="idl">PATRONUS</span><span class="idv">${esc(t.patronus)}</span></div>
+              <div class="crow"><span class="idl">WAND</span><span class="idv">${esc(t.wand)}</span></div></div>
+            <p class="sig"><small>HEADMASTER</small>A. P. W. B. Dumbledore</p><p class="cno">No. ${no(i).slice(5)}</p>
+            <div class="shine"></div></div>`; }).join('');
+      }
     }
     el.className = `sq ${style}${one ? ' one' : ''}`;
     el.innerHTML = html;
     const base = one ? `${chars[0].name || '인물'}` : `${chars[0].name || '인물1'}_${chars[1].name || '인물2'}`;
-    el.dataset.file = fname(`${base}_${{ s1: '대출카드', s2: '통지서', s3: '학생증' }[style]}`);
+    el.dataset.file = fname(`${base}_${{ s1: '대출카드', s2: '통지서', s3: '학생증', s4: '학생증' }[style]}`);
   }
 
-  // 요약 카드 고르기 · 사진 · 미리보기
+  // ---------- 학생증 보조: 짙은 기숙사 톤, 바코드, 직인 ----------
+  const DK = { '그리핀도르': '#240d11', '슬리데린': '#0d1e17', '래번클로': '#121a2c', '후플푸프': '#221b0b' };
+  function barcodeURL(seed, w, h) {
+    const c = document.createElement('canvas'); c.width = w * 2; c.height = h * 2;
+    const x = c.getContext('2d'); x.fillStyle = '#1f2430'; let X = 0, sd = seed;
+    while (X < w * 2) { sd = (sd * 9301 + 49297) % 233280; const bw = 1 + (sd % 4); if ((sd >> 3) % 2) x.fillRect(X, 0, bw, h * 2); X += bw + 1; }
+    return c.toDataURL('image/png');
+  }
+  function sealStamp() {
+    const c = document.createElement('canvas'); c.width = 124; c.height = 124;
+    const x = c.getContext('2d'); x.translate(62, 62); x.strokeStyle = x.fillStyle = '#d8b968'; x.globalAlpha = .6;
+    x.lineWidth = 2; x.beginPath(); x.arc(0, 0, 58, 0, 7); x.stroke(); x.lineWidth = 1; x.beginPath(); x.arc(0, 0, 44, 0, 7); x.stroke();
+    x.font = "600 11px 'Plex Mono', monospace"; const t = 'HOGWARTS · SCHOOL · OF · WITCHCRAFT · ';
+    for (let i = 0; i < t.length; i++) { x.save(); x.rotate(i / t.length * Math.PI * 2); x.fillText(t[i], -3, -47); x.restore(); }
+    x.font = "28px 'IM Fell English SC', serif"; x.textAlign = 'center'; x.fillText('H', 0, 10);
+    return c.toDataURL('image/png');
+  }
+
+  // ---------- 학생증 한글 / English ----------
+  let sqLang = 'ko', enLoading = false;
+  try { if (localStorage.getItem('sorting-lang') === 'en') sqLang = 'en'; } catch (_) {}
+  const enSig = () => JSON.stringify(state.characters.map((p) => [p.name, p.patronus, (p.wand || {}).wood, (p.wand || {}).core]));
+  const enReady = () => !!(state.en && state.en.sig === enSig());
+  const titleCase = (w) => w ? w[0] + w.slice(1).toLowerCase() : '';
+  function idText(p, i) {
+    const h = house(p.house);
+    if (sqLang === 'en' && enReady()) {
+      const e = state.en.people[i] || {};
+      return { name: e.name || p.name || '', house: titleCase(h.en), year: 'Fifth Year', patronus: e.patronus || p.patronus || '', wand: [e.wood, e.core].filter(Boolean).join(' · ') || wandShort(p) };
+    }
+    return { name: p.name || '', house: h.en || '', year: '5학년', patronus: p.patronus || '', wand: wandShort(p) };
+  }
+  async function ensureEn() {
+    if (enReady() || enLoading) return enReady();
+    enLoading = true; $('langnote').textContent = '영문으로 바꾸는 중입니다…';
+    try {
+      const people = state.characters.map((p) => ({ name: p.name, patronus: p.patronus, wood: (p.wand || {}).wood, core: (p.wand || {}).core }));
+      const r = await fetch('/api/sort', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ part: 'en', job: (state.base && state.base.job) || 'en', people }) });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !Array.isArray(d.people)) throw new Error(d.error || '영문으로 바꾸지 못했습니다.');
+      state.en = { sig: enSig(), people: d.people };
+      $('langnote').textContent = '영문 표기는 한 번 받아 두면 다시 쓰입니다.';
+      persist(); return true;
+    } catch (err) { $('langnote').textContent = err.message === 'Failed to fetch' ? '서버에 연결하지 못했습니다.' : err.message; return false; }
+    finally { enLoading = false; }
+  }
+
+  // ---------- 요약 카드 고르기 · 사진 · 미리보기 ----------
+  const isId = () => sqStyle === 's3' || sqStyle === 's4';
   function renderSqPanel() {
     if (!state || !state.done) return;
     document.querySelectorAll('#sqstyle button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.sq === sqStyle)));
+    document.querySelectorAll('#lang button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === sqLang)));
+    $('langbar').hidden = !isId();
     const ph = $('photos');
-    ph.hidden = sqStyle !== 's3';
-    if (sqStyle === 's3') {
+    ph.hidden = !isId();
+    if (isId()) {
       const photos = state.photos || [];
       ph.innerHTML = state.characters.map((p, i) => `<div class="pr2"><span class="thumb" style="${photos[i] ? `background-image:url(${photos[i]})` : ''}"></span><span>${esc(p.name || '인물')}</span>
-        <button type="button" class="btn" data-photo="${i}">${photos[i] ? '사진 바꾸기' : '사진 올리기'}</button>${photos[i] ? `<button type="button" class="btn" data-unphoto="${i}">빼기</button>` : ''}</div>`).join('')
-        + '<p class="note">사진은 서버로 보내지 않고 이 브라우저 안에서만 씁니다. 세로 사진이 잘 맞아요.</p><input type="file" id="photofile" accept="image/*" hidden>';
+        <button type="button" class="btn" data-photo="${i}">${photos[i] ? '다른 사진' : '사진 올리기'}</button>${photos[i] ? `<button type="button" class="btn" data-adjust="${i}">사진 맞추기</button><button type="button" class="btn" data-unphoto="${i}">빼기</button>` : ''}</div>`).join('')
+        + '<p class="note">사진은 서버로 보내지 않고 이 브라우저 안에서만 씁니다.</p><input type="file" id="photofile" accept="image/*" hidden>';
+      if (sqLang === 'en' && !enReady()) ensureEn().then((ok) => { if (ok) squareCard($('sqprev')); });
     }
     squareCard($('sqprev'));
   }
@@ -1121,38 +1300,90 @@
     sqStyle = b.dataset.sq; try { localStorage.setItem('sorting-sq', sqStyle); } catch (_) {}
     renderSqPanel();
   });
+  $('lang').addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    sqLang = b.dataset.lang; try { localStorage.setItem('sorting-lang', sqLang); } catch (_) {}
+    if (sqLang === 'ko') $('langnote').textContent = '';
+    renderSqPanel();
+  });
   let photoTarget = 0;
   $('photos').addEventListener('click', (e) => {
     const b = e.target.closest('button'); if (!b) return;
     if (b.dataset.photo !== undefined) { photoTarget = Number(b.dataset.photo); $('photofile').click(); }
-    if (b.dataset.unphoto !== undefined) { state.photos[Number(b.dataset.unphoto)] = null; renderSqPanel(); persist(); }
+    if (b.dataset.adjust !== undefined) { const i = Number(b.dataset.adjust); const src = (state.photoSrc || [])[i] || state.photos[i]; openPhotoEditor(i, src, (state.photoCrop || [])[i]); }
+    if (b.dataset.unphoto !== undefined) { const i = Number(b.dataset.unphoto); state.photos[i] = null; if (state.photoSrc) state.photoSrc[i] = null; if (state.photoCrop) state.photoCrop[i] = null; renderSqPanel(); persist(); }
   });
   $('photos').addEventListener('change', async (e) => {
     if (e.target.id !== 'photofile' || !e.target.files[0]) return;
-    try {
-      state.photos = state.photos || [];
-      state.photos[photoTarget] = await cropPhoto(e.target.files[0]);
-      renderSqPanel(); persist();
-    } catch (_) { $('remain').textContent = '사진을 읽지 못했습니다.'; }
+    try { openPhotoEditor(photoTarget, await downscale(e.target.files[0], 1200), null); }
+    catch (_) { $('remain').textContent = '사진을 읽지 못했습니다.'; }
   });
-  // 학생증 사진 칸 비율(약 0.62:1)에 맞춰 가운데를 잘라 줄입니다.
-  function cropPhoto(file) {
+  function downscale(file, max) {
     return new Promise((resolve, reject) => {
       const img = new Image(), url = URL.createObjectURL(file);
       img.onload = () => {
-        const R = 116 / 174, W = 348, H = Math.round(W / R);
-        let sw = img.width, sh = img.width / R;
-        if (sh > img.height) { sh = img.height; sw = sh * R; }
-        const sx = (img.width - sw) / 2, sy = Math.max(0, (img.height - sh) * 0.3);
-        const c = document.createElement('canvas'); c.width = W; c.height = H;
-        c.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, W, H);
-        URL.revokeObjectURL(url); resolve(c.toDataURL('image/jpeg', 0.86));
+        const sc = Math.min(1, max / Math.max(img.width, img.height));
+        const c = document.createElement('canvas'); c.width = Math.round(img.width * sc); c.height = Math.round(img.height * sc);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url); resolve(c.toDataURL('image/jpeg', 0.85));
       };
       img.onerror = () => { URL.revokeObjectURL(url); reject(); };
       img.src = url;
     });
   }
 
+  // ---------- 사진 맞추기 창: 끌어서 이동, 슬라이더·휠·두 손가락으로 확대 ----------
+  const PE = { FW: 210, FH: 270, OUTW: 420, OUTH: 540 };   // 학생증 사진 칸 비율 7:9
+  let pe = null;
+  function openPhotoEditor(i, src, crop) {
+    const img = new Image();
+    img.onload = () => {
+      pe = { i, src, img, z: (crop && crop.z) || 1, x: (crop && crop.x) || 0, y: (crop && crop.y) || 0 };
+      $('peimg').src = src; $('pezoom').value = String(pe.z);
+      $('pe').hidden = false; document.body.style.overflow = 'hidden';
+      peLayout();
+    };
+    img.src = src;
+  }
+  function peGeom() {
+    const { img, z } = pe, base = Math.max(PE.FW / img.width, PE.FH / img.height), sc = base * z;
+    const dw = img.width * sc, dh = img.height * sc, mx = (dw - PE.FW) / 2, my = (dh - PE.FH) / 2;
+    pe.x = Math.max(-mx, Math.min(mx, pe.x)); pe.y = Math.max(-my, Math.min(my, pe.y));
+    return { dw, dh, left: (PE.FW - dw) / 2 + pe.x, top: (PE.FH - dh) / 2 + pe.y };
+  }
+  function peLayout() {
+    const g = peGeom(), st = $('pestage'), fr = $('peframe');
+    const fx = (st.clientWidth - PE.FW) / 2, fy = (st.clientHeight - PE.FH) / 2;
+    fr.style.left = fx + 'px'; fr.style.top = fy + 'px';
+    Object.assign($('peimg').style, { width: g.dw + 'px', height: g.dh + 'px', left: fx + g.left + 'px', top: fy + g.top + 'px' });
+  }
+  const pts = new Map(); let pinch = null;
+  $('pestage').addEventListener('pointerdown', (e) => { if (!pe) return; $('pestage').setPointerCapture(e.pointerId); pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), z: pe.z }; } });
+  $('pestage').addEventListener('pointermove', (e) => {
+    if (!pe || !pts.has(e.pointerId)) return;
+    const prev = pts.get(e.pointerId); pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pts.size === 2 && pinch) { const [a, b] = [...pts.values()]; pe.z = Math.max(1, Math.min(4, pinch.z * Math.hypot(a.x - b.x, a.y - b.y) / pinch.d)); $('pezoom').value = String(pe.z); }
+    else if (pts.size === 1) { pe.x += e.clientX - prev.x; pe.y += e.clientY - prev.y; }
+    peLayout();
+  });
+  const peUp = (e) => { pts.delete(e.pointerId); if (pts.size < 2) pinch = null; };
+  $('pestage').addEventListener('pointerup', peUp); $('pestage').addEventListener('pointercancel', peUp);
+  $('pestage').addEventListener('wheel', (e) => { if (!pe) return; e.preventDefault(); pe.z = Math.max(1, Math.min(4, pe.z * (e.deltaY < 0 ? 1.08 : 1 / 1.08))); $('pezoom').value = String(pe.z); peLayout(); }, { passive: false });
+  $('pezoom').addEventListener('input', () => { if (!pe) return; pe.z = Number($('pezoom').value); peLayout(); });
+  $('pereset').addEventListener('click', () => { if (!pe) return; pe.z = 1; pe.x = 0; pe.y = 0; $('pezoom').value = '1'; peLayout(); });
+  const peClose = () => { $('pe').hidden = true; document.body.style.overflow = ''; pe = null; };
+  $('pecancel').addEventListener('click', peClose);
+  $('peapply').addEventListener('click', () => {
+    if (!pe) return;
+    const g = peGeom(), k = PE.OUTW / PE.FW;
+    const c = document.createElement('canvas'); c.width = PE.OUTW; c.height = PE.OUTH;
+    const x = c.getContext('2d'); x.fillStyle = '#3a3f4b'; x.fillRect(0, 0, c.width, c.height);
+    x.drawImage(pe.img, g.left * k, g.top * k, g.dw * k, g.dh * k);
+    state.photos = state.photos || []; state.photoSrc = state.photoSrc || []; state.photoCrop = state.photoCrop || [];
+    state.photos[pe.i] = c.toDataURL('image/jpeg', 0.88); state.photoSrc[pe.i] = pe.src; state.photoCrop[pe.i] = { z: pe.z, x: pe.x, y: pe.y };
+    peClose(); renderSqPanel(); persist();
+  });
+  window.addEventListener('resize', () => { if (pe) peLayout(); });
 
   // 미리보기 등에서 완성 결과를 한 번에 그릴 때
   function render(res) {
@@ -1202,6 +1433,7 @@
     btn.disabled = true; btn.textContent = '저장하는 중';
     try {
       if (document.fonts && document.fonts.ready) await document.fonts.ready;
+      if (target.kind === 'square' && isId() && sqLang === 'en' && !enReady()) await ensureEn();
       // 화면에 무엇이 보이든, 저장할 모양을 화면 밖에 새로 그려서 찍습니다.
       const parts = target.kind === 'square' ? [0] : (split ? [1, 2] : [0]);
       const files = [];
@@ -1226,7 +1458,7 @@
   const saveRecent = (a) => {
     try { localStorage.setItem(RECENT_KEY, JSON.stringify(a.slice(0, 5))); }
     catch (_) { // 용량이 넘치면 오래된 결과의 사진부터 빼고 다시 저장
-      try { localStorage.setItem(RECENT_KEY, JSON.stringify(a.slice(0, 5).map((x, i) => (i === 0 ? x : { ...x, photos: [] })))); } catch (_) {}
+      try { localStorage.setItem(RECENT_KEY, JSON.stringify(a.slice(0, 5).map((x, i) => (i === 0 ? { ...x, photoSrc: [] } : { ...x, photos: [], photoSrc: [] })))); } catch (_) {}
     }
   };
   let persistTimer = 0;
@@ -1235,7 +1467,7 @@
     clearTimeout(persistTimer);
     persistTimer = setTimeout(() => {
       const { images, ...base } = state.base;   // 이미지는 용량이 커서 빼고 저장
-      const item = { id: base.job, at: Date.now(), solo: state.solo, characters: state.characters, relationship: state.relationship, photos: state.photos || [], base: { ...base, images: [] } };
+      const item = { id: base.job, at: Date.now(), solo: state.solo, characters: state.characters, relationship: state.relationship, photos: state.photos || [], photoSrc: state.photoSrc || [], photoCrop: state.photoCrop || [], en: state.en || null, base: { ...base, images: [] } };
       const list = loadRecent().filter((x) => x.id !== item.id);
       list.unshift(item); saveRecent(list);
     }, 300);
@@ -1256,7 +1488,7 @@
     if (b.dataset.open) {
       const x = loadRecent().find((y) => y.id === b.dataset.open); if (!x) return;
       streams.forEach((ac) => ac.abort()); streams = [];
-      state = { solo: x.solo, characters: x.characters, relationship: x.relationship, photos: x.photos || [], done: true, base: x.base, editing: null, busy: null };
+      state = { solo: x.solo, characters: x.characters, relationship: x.relationship, photos: x.photos || [], photoSrc: x.photoSrc || [], photoCrop: x.photoCrop || [], en: x.en || null, done: true, base: x.base, editing: null, busy: null };
       renderLive(); finishButtons(); show(result);
       $('remain').textContent = '저장해 둔 결과를 불러왔습니다.';
     }
