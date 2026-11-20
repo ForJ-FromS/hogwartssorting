@@ -199,7 +199,7 @@ module.exports = async function handler(req, res) {
       },
       body: JSON.stringify({
         model: MODEL,
-        max_tokens: solo ? 2500 : 4500,
+        max_tokens: solo ? 4000 : 8000,
         system: SYSTEM,
         messages: [{ role: 'user', content }],
         tools: [TOOL],
@@ -225,7 +225,8 @@ module.exports = async function handler(req, res) {
       const m = txt.match(/\{[\s\S]*\}/);
       if (m) { try { result = JSON.parse(m[0]); } catch (_) {} }
     }
-    if (!result) console.error('no tool_use in response', JSON.stringify(data).slice(0, 800));
+    if (!result) console.error('no tool_use in response', 'stop_reason=' + data.stop_reason, JSON.stringify(data).slice(0, 1500));
+    else if (!Array.isArray(result.characters)) console.error('bad result shape', 'stop_reason=' + data.stop_reason, JSON.stringify(result).slice(0, 1500));
     if (!result || !Array.isArray(result.characters) || result.characters.length !== (solo ? 1 : 2) || (!solo && !result.relationship)) {
       await decr(ipKey); await decr(allKey);
       return res.status(502).json({ error: '결과를 읽지 못했습니다. 다시 시도해 주세요.' });
