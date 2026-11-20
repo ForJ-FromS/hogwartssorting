@@ -97,6 +97,16 @@
   .hint { font-size: 13px; color: var(--faint); }
   .error { margin-top: 16px; padding: 12px 14px; border-radius: 10px; background: #fff; border: 1px solid #e6c3c3; color: #8a2f2f; font-size: 14px; }
 
+  /* OOC 지침 */
+  .ooc { margin-top: 16px; padding: 0; }
+  .ooc summary { cursor: pointer; padding: 16px 24px; font-weight: 700; font-size: 14px; list-style: none; display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; }
+  .ooc summary::-webkit-details-marker { display: none; }
+  .ooc summary::before { content: ''; display: inline-block; width: 7px; height: 7px; border-right: 1.5px solid var(--sub); border-bottom: 1.5px solid var(--sub); transform: rotate(-45deg); margin-right: 2px; transition: transform .15s; }
+  .ooc[open] summary::before { transform: rotate(45deg); }
+  .ooc summary .hint { font-weight: 400; }
+  .ooc pre { margin: 0 24px 14px; padding: 16px 18px; background: var(--field); border: 1px solid var(--fieldline); border-radius: 10px; font: inherit; font-size: 13.5px; line-height: 1.65; white-space: pre-wrap; word-break: break-all; color: var(--ink); }
+  .ooc > .btn { margin: 0 24px 20px; }
+
   /* 대기 */
   .wait { text-align: center; padding: 64px 20px; }
   .dots { display: inline-flex; gap: 10px; margin-bottom: 18px; }
@@ -238,6 +248,34 @@
     </div>
   </form>
 
+  <!-- OOC 지침 -->
+  <details class="panel ooc" id="ooc">
+    <summary>자료 뽑는 OOC 지침 <span class="hint">캐릭터봇 채팅에 붙여 넣으면 두 사람의 인물 기록을 받을 수 있습니다</span></summary>
+    <pre id="ooctext">*OOC: 롤플레잉을 잠시 멈추고 아래 인물 기록을 작성한다. 끝나면 멈추고 다음 지시를 기다린다.
+- 지금까지의 설정·대화·행동만 근거로 쓴다. 지어내지 않는다. 말과 행동이 다르면 행동 우선.
+- 세계관·직업·소속은 배경으로만 두고, 인물이 어떻게 자랐고 무엇을 겪었는지, 어떻게 판단하고 움직이는지를 중심으로 쓴다.
+- 「~다」체. 느낌표·이모지·비유 금지. 항목당 1~2문장, 근거는 실제 장면을 짧게.
+- 양식을 그대로 출력. 항목명 변경 금지. [NPC]도 같은 항목.
+
+[PC]
+이름:
+한줄요약:
+움직이는 법: 판단할 때 무엇이 먼저인가, 위기에서 어떻게 하는가 | 근거
+사람 대하는 법: 가까운 사람 / 낯선 사람 / 싫은 사람
+잘하는 것: | 근거
+못하는 것: | 근거
+버릇: 말버릇·몸버릇 2~3개
+차림새: 옷·소지품에서 드러나는 성향
+원하는 것:
+두려운 것:
+[NPC]
+(PC와 같은 항목)
+[관계]
+한줄정의: 서로에게 무엇인가
+부딪히는 이유 / 맞물리는 이유:*</pre>
+    <button type="button" class="btn" id="ooccopy">지침 복사</button>
+  </details>
+
   <!-- 대기 -->
   <div id="wait" class="panel wait" hidden aria-live="polite">
     <div class="dots" aria-hidden="true"><i style="background:#7f1d24"></i><i style="background:#c99a22"></i><i style="background:#22375e"></i><i style="background:#1f4d3a"></i></div>
@@ -272,7 +310,14 @@
 
   const form = $('form'), wait = $('wait'), result = $('result'), errorBox = $('error');
   const text = $('text');
-  const show = (el) => { [form, wait, result].forEach((x) => (x.hidden = x !== el)); window.scrollTo({ top: 0 }); };
+  const ooc = $('ooc');
+  const show = (el) => { [form, wait, result].forEach((x) => (x.hidden = x !== el)); ooc.hidden = el !== form; window.scrollTo({ top: 0 }); };
+  $('ooccopy').addEventListener('click', async () => {
+    const b = $('ooccopy');
+    try { await navigator.clipboard.writeText($('ooctext').textContent); b.textContent = '복사했습니다'; }
+    catch (_) { b.textContent = '복사하지 못했습니다. 직접 긁어서 복사해 주세요.'; }
+    setTimeout(() => (b.textContent = '지침 복사'), 1800);
+  });
   const fail = (msg) => { errorBox.textContent = msg; errorBox.hidden = false; };
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
