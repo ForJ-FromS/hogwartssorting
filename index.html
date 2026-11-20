@@ -556,7 +556,7 @@
 
   function scheduleRender() {
     if (rerenderTimer) return;
-    rerenderTimer = setTimeout(() => { rerenderTimer = 0; renderLive(); }, 120);
+    rerenderTimer = setTimeout(() => { rerenderTimer = 0; try { renderLive(); } catch (e) { console.warn('render skipped', e); } }, 120);
   }
 
   form.addEventListener('submit', async (e) => {
@@ -576,10 +576,10 @@
     renderLive(); show(result);
 
     const jobs = state.characters.map((_, i) => streamPart({ ...base, part: 'character', index: i }, (json) => {
-      const p = partialParse(json); if (p) { state.characters[i] = p; scheduleRender(); }
+      const p = partialParse(json); if (p && typeof p === 'object') { state.characters[i] = p; scheduleRender(); }
     }));
     if (!solo) jobs.push(streamPart({ ...base, part: 'relationship' }, (json) => {
-      const p = partialParse(json); if (p) { state.relationship = p; scheduleRender(); }
+      const p = partialParse(json); if (p && typeof p === 'object') { state.relationship = p; scheduleRender(); }
     }));
     try {
       const results = await Promise.all(jobs);
@@ -638,11 +638,14 @@
   }
 
   function person(p) {
-    p = p || {};
-    const h = house(p.house), w = p.wand || {};
+    p = (p && typeof p === 'object') ? p : {};
+    const h = house(p.house), w = (p.wand && typeof p.wand === 'object') ? p.wand : {};
     const sa = stripe(h, 12, [['c', 18], ['c2', 6]]);
     const sb = stripe(h, 118, [['c', 26], ['c2', 8], ['c', 10], ['c2', 4]]);
-    const list = (arr, min, fn) => { const out = (arr || []).map(fn); for (let i = out.length; i < min; i++) out.push(fn({})); return out.join(''); };
+    const list = (arr, min, fn) => {
+      const safe = Array.isArray(arr) ? arr.map((x) => (x && typeof x === 'object') || typeof x === 'string' ? x : {}) : [];
+      const out = safe.map(fn); for (let i = out.length; i < min; i++) out.push(fn({})); return out.join('');
+    };
     return `
       <article class="person" style="--h:${h.c};--h2:${h.c2};--hd:${h.cd};--soft:${h.soft};--sa:${sa};--sb:${sb};--sf:${flag(h)}">
         <div class="stripe"></div>
