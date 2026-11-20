@@ -39,6 +39,23 @@
     --gold: #b08d4f; --btn: #1f2430;
   }
 
+  /* 테마 색 — 깃발 / 성적표 / 유리 */
+  body.banner, body.record {
+    --page: #e6e2da;
+    --ink: #22252c; --sub: #606672; --faint: #969aa3;
+    --rule: #e9e5dc; --qbg: #f2f0eb;
+    --panel: #fbf9f4; --field: #fff; --fieldline: #e0dbd0;
+    --gold: #b08d4f; --btn: #22252c;
+  }
+  body.record { --rule: #e4e1da; --panel: #fff; }
+  body.glass {
+    --page: linear-gradient(165deg, #e8ebf0, #d9dee6) fixed;
+    --ink: #22252c; --sub: #606672; --faint: #969aa3;
+    --rule: #e8ebef; --qbg: #f0f2f5;
+    --panel: rgba(255, 255, 255, .78); --field: #fff; --fieldline: #dfe3e9;
+    --gold: #8a9bb3; --btn: #22252c;
+  }
+
   /* 머리 */
   header { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 26px; }
   .houses { display: flex; height: 6px; width: 120px; border-radius: 3px; overflow: hidden; margin-bottom: 14px; }
@@ -165,6 +182,7 @@
   /* --- B 넥타이 --- */
   body.tie .sheet { background: #fffdf8; border-radius: 20px; overflow: hidden; box-shadow: 0 30px 60px -30px rgba(50, 40, 30, .5); padding-bottom: 34px; }
   body.tie .orn, body.tie .seal { display: none; }
+  .doc { display: none; }
   body.tie .bond { padding: 30px 34px 28px; }
   body.tie .bond .pn { color: var(--sub); }
   body.tie .bond h2 { margin: 4px 0 8px; font-size: 26px; }
@@ -172,6 +190,48 @@
   body.tie .person { padding: 0 34px; }
   body.tie .stripe { height: 118px; margin: 0 -34px; background: var(--h) var(--sb) left center / auto 100% no-repeat; }
   body.tie .plate { position: relative; margin: -56px 0 18px; background: #fffdf8; border-radius: 14px; padding: 16px 20px; box-shadow: 0 10px 24px -12px rgba(0, 0, 0, .35); border-top: 3px solid var(--h2); }
+
+  /* --- 깃발 --- */
+  body.banner .sheet { background: #fbf9f4; border-radius: 18px; overflow: hidden; box-shadow: 0 30px 60px -30px rgba(40, 30, 20, .5); padding-bottom: 32px; }
+  body.banner .stripe, body.banner .orn { display: none; }
+  body.banner .bond { padding: 30px 40px 26px; border-bottom: 1px solid var(--rule); }
+  body.banner .bond .pn { color: var(--sub); }
+  body.banner .bond h2 { margin: 4px 0 8px; font-size: 26px; }
+  body.banner .bond .sum { max-width: 44em; }
+  body.banner .person { padding: 0 36px; }
+  body.banner .plate { display: flex; align-items: flex-start; gap: 22px; }
+  body.banner .seal { width: 76px; height: 170px; flex: none; background: var(--sf) center top / 100% 100% no-repeat; color: #fff; font-weight: 800; font-size: 30px; line-height: 1; text-align: center; padding-top: 24px; }
+  body.banner .nm { padding-top: 28px; }
+  body.banner .body { margin-top: 6px; }
+
+  /* --- 성적표 --- */
+  body.record .sheet { background: #fff; border-radius: 4px; box-shadow: 0 30px 60px -30px rgba(40, 30, 20, .45); padding: 44px 48px; }
+  body.record .stripe, body.record .orn { display: none; }
+  body.record .bond { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; padding-bottom: 22px; border-bottom: 2px solid var(--ink); }
+  body.record .bond .pn { color: var(--ink); }
+  body.record .bond h2 { margin: 4px 0 6px; font-size: 26px; }
+  body.record .bond .sum { max-width: 38em; }
+  body.record .doc { display: block; flex: none; font-size: 12px; font-weight: 700; color: var(--faint); text-align: right; line-height: 1.6; letter-spacing: .04em; }
+  body.record .cols { gap: 44px; margin-top: 28px; }
+  body.record .solo .cols { margin-top: 0; }
+  body.record .person + .person { border-left: 0; }
+  body.record .plate { display: flex; align-items: center; gap: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--rule); }
+  body.record .seal { width: 44px; height: 44px; flex: none; border-radius: 8px; background: var(--h); border-bottom: 6px solid var(--h2); color: #fff; font-weight: 800; font-size: 20px; display: grid; place-items: center; }
+  body.record .item { display: grid; grid-template-columns: 128px 1fr; gap: 16px; }
+  body.record .t { margin: 2px 0 0; color: var(--faint); }
+
+  /* --- 유리 --- */
+  body.glass .sheet { background: #f4f6f9; border-radius: 24px; overflow: hidden; box-shadow: 0 30px 60px -30px rgba(30, 40, 60, .5); }
+  body.glass .stripe, body.glass .orn { display: none; }
+  body.glass .bond { padding: 30px 36px 26px; background: #fff; }
+  body.glass .bond .pn { color: var(--sub); }
+  body.glass .bond h2 { margin: 4px 0 8px; font-size: 26px; }
+  body.glass .bond .sum { max-width: 44em; }
+  body.glass .person { padding: 26px 26px 30px; background: linear-gradient(170deg, var(--soft) 0%, #f4f6f9 70%); }
+  body.glass .person + .person { border-left: 0; }
+  body.glass .plate { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+  body.glass .seal { width: 48px; height: 48px; flex: none; border-radius: 50%; background: var(--h); color: #fff; font-weight: 800; font-size: 20px; display: grid; place-items: center; box-shadow: 0 0 0 4px rgba(255, 255, 255, .75); }
+  body.glass .body { background: rgba(255, 255, 255, .78); border: 1px solid rgba(255, 255, 255, .95); border-radius: 16px; padding: 4px 20px; box-shadow: 0 10px 24px -18px rgba(30, 40, 60, .5); }
 
   .after { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; align-items: center; }
   #stage { position: fixed; left: -10000px; top: 0; width: 600px; }
@@ -189,6 +249,17 @@
     body.tie .person + .person { margin-top: 30px; }
     body.parchment .bond, body.tie .bond { padding: 24px 20px; }
     .bond h2 { font-size: 21px !important; }
+    body.banner .person { padding: 0 20px; }
+    body.banner .person + .person { padding-top: 0; margin-top: 30px; }
+    body.banner .bond { padding: 24px 20px; }
+    body.record .sheet { padding: 28px 20px; }
+    body.record .bond { flex-direction: column; align-items: flex-start; }
+    body.record .doc { text-align: left; }
+    body.record .cols { gap: 34px; }
+    body.record .item { grid-template-columns: 1fr; gap: 2px; }
+    body.glass .person { padding: 22px 16px 24px; }
+    body.glass .bond { padding: 24px 20px; }
+    .seg { flex-wrap: wrap; }
   }
   @media (prefers-reduced-motion: reduce) { .dots i { animation: none; opacity: .8; } }
 </style>
@@ -206,6 +277,9 @@
       <div class="seg" id="theme" role="group" aria-label="카드 디자인">
         <button type="button" data-theme="parchment" aria-pressed="true">양피지</button>
         <button type="button" data-theme="tie" aria-pressed="false">넥타이</button>
+        <button type="button" data-theme="banner" aria-pressed="false">깃발</button>
+        <button type="button" data-theme="record" aria-pressed="false">성적표</button>
+        <button type="button" data-theme="glass" aria-pressed="false">유리</button>
       </div>
     </div>
   </header>
@@ -300,10 +374,10 @@
   const $ = (id) => document.getElementById(id);
   // 기숙사 넥타이 배색: c 주색, c2 줄무늬색, cd 인장 그림자색
   const HOUSE = {
-    '그리핀도르': { en: 'GRYFFINDOR', c: '#7f1d24', c2: '#c9a24a', cd: '#4f1015' },
-    '슬리데린':   { en: 'SLYTHERIN',  c: '#1f4d3a', c2: '#a9afb4', cd: '#112c21' },
-    '래번클로':   { en: 'RAVENCLAW',  c: '#22375e', c2: '#a2723f', cd: '#121f37' },
-    '후플푸프':   { en: 'HUFFLEPUFF', c: '#c99a22', c2: '#2a2522', cd: '#8a6812' },
+    '그리핀도르': { en: 'GRYFFINDOR', c: '#7f1d24', c2: '#c9a24a', cd: '#4f1015', soft: '#efd9d6' },
+    '슬리데린':   { en: 'SLYTHERIN',  c: '#1f4d3a', c2: '#a9afb4', cd: '#112c21', soft: '#d6e5dc' },
+    '래번클로':   { en: 'RAVENCLAW',  c: '#22375e', c2: '#a2723f', cd: '#121f37', soft: '#d8dfec' },
+    '후플푸프':   { en: 'HUFFLEPUFF', c: '#c99a22', c2: '#2a2522', cd: '#8a6812', soft: '#f3e6c4' },
   };
   const MAX_IMAGES = 4, MAX_TEXT = 24000;
   let images = [];
@@ -322,13 +396,15 @@
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
   // ---------- 카드 디자인 ----------
+  const THEMES = ['parchment', 'tie', 'banner', 'record', 'glass'];
+  const SAVE_BG = { parchment: '#efe3c8', tie: '#fffdf8', banner: '#fbf9f4', record: '#ffffff', glass: '#f4f6f9' };
   function setTheme(t) {
     document.body.className = t;
     document.querySelectorAll('#theme button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.theme === t)));
     try { localStorage.setItem('sorting-theme', t); } catch (_) {}
   }
   $('theme').addEventListener('click', (e) => { if (e.target.dataset.theme) setTheme(e.target.dataset.theme); });
-  try { const saved = localStorage.getItem('sorting-theme'); if (saved === 'tie' || saved === 'parchment') setTheme(saved); } catch (_) {}
+  try { const saved = localStorage.getItem('sorting-theme'); if (THEMES.includes(saved)) setTheme(saved); } catch (_) {}
 
   // ---------- 페어 / 1인 ----------
   let mode = 'pair';
@@ -438,7 +514,7 @@
 
   // ---------- 결과 그리기 ----------
   // 두 디자인이 같은 마크업을 쓰고, 모양은 body 의 테마 클래스(CSS)로만 바뀝니다.
-  const house = (name) => HOUSE[name] || { en: '', c: '#3b5673', c2: '#a9afb4', cd: '#22334a' };
+  const house = (name) => HOUSE[name] || { en: '', c: '#3b5673', c2: '#a9afb4', cd: '#22334a', soft: '#dde3ea' };
   const fname = (s) => String(s).replace(/[\\/:*?"<>|\s]+/g, '_');
 
   // 넥타이 줄무늬는 그림으로 그려 둡니다 (CSS 반복 그라데이션은 PNG 저장 때 빠지기 때문).
@@ -464,26 +540,40 @@
     return (stripeCache[key] = `url(${c.toDataURL('image/png')})`);
   }
 
+  const flagCache = {};
+  function flag(h) {
+    if (flagCache[h.c]) return flagCache[h.c];
+    const k = 2, W = 76 * k, H = 170 * k;
+    const c = document.createElement('canvas'); c.width = W; c.height = H;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = h.c;
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(W, 0); ctx.lineTo(W, H); ctx.lineTo(W / 2, H * 0.86); ctx.lineTo(0, H); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = h.c2; ctx.fillRect(0, 118 * k, W, 8 * k);
+    return (flagCache[h.c] = `url(${c.toDataURL('image/png')})`);
+  }
+
   function person(p) {
     const h = house(p.house), w = p.wand || {};
     const sa = stripe(h, 12, [['c', 18], ['c2', 6]]);
     const sb = stripe(h, 118, [['c', 26], ['c2', 8], ['c', 10], ['c2', 4]]);
     return `
-      <article class="person" style="--h:${h.c};--h2:${h.c2};--hd:${h.cd};--sa:${sa};--sb:${sb}">
+      <article class="person" style="--h:${h.c};--h2:${h.c2};--hd:${h.cd};--soft:${h.soft};--sa:${sa};--sb:${sb};--sf:${flag(h)}">
         <div class="stripe"></div>
         <div class="plate">
-          <div class="seal">${esc((h.en || '').slice(0, 1))}</div>
-          <div><p class="house">${esc(h.en)}</p><h3>${esc(p.name)}</h3></div>
+          <div class="seal"><span>${esc((h.en || '').slice(0, 1))}</span></div>
+          <div class="nm"><p class="house">${esc(h.en)}</p><h3>${esc(p.name)}</h3></div>
         </div>
-        <div class="item"><p class="t">기숙사 해석</p><p class="v plain">${esc(p.house_reason)}</p>${p.house_evidence ? `<p class="q">근거 — ${esc(p.house_evidence)}</p>` : ''}</div>
-        <div class="item"><p class="t">모자가 망설인 기숙사</p><p class="v">${esc(p.alt_house)}</p><p class="n">${esc(p.alt_reason)}</p></div>
-        <div class="item"><p class="t">교복 입는 법</p><p class="v plain">${esc(p.uniform)}</p><p class="n">${esc(p.uniform_note)}</p></div>
-        <div class="item"><p class="t">잘하는 과목</p><p class="v">${esc(p.best_subject)}</p><p class="n">${esc(p.best_reason)}</p></div>
-        <div class="item"><p class="t">약한 과목</p><p class="v">${esc(p.weak_subject)}</p><p class="n">${esc(p.weak_reason)}</p></div>
-        <div class="item"><p class="t">습관</p><ul class="habits">${(p.habits || []).map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div>
-        <div class="item"><p class="t">지팡이</p><p class="v">${esc(w.wood)} · ${esc(w.core)} · ${esc(w.length)} · ${esc(w.flexibility)}</p>
-          <p class="n"><b>나무</b> — ${esc(w.wood_note)}</p><p class="n"><b>심</b> — ${esc(w.core_note)}</p><p class="n"><b>길이·유연성</b> — ${esc(w.build_note)}</p></div>
-        <div class="item"><p class="t">졸업 후 직업</p><p class="v">${esc(p.career)}</p><p class="n">${esc(p.career_reason)}</p></div>
+        <div class="body">
+        <div class="item"><p class="t">기숙사 해석</p><div class="c"><p class="v plain">${esc(p.house_reason)}</p>${p.house_evidence ? `<p class="q">근거 — ${esc(p.house_evidence)}</p>` : ''}</div></div>
+        <div class="item"><p class="t">모자가 망설인 기숙사</p><div class="c"><p class="v">${esc(p.alt_house)}</p><p class="n">${esc(p.alt_reason)}</p></div></div>
+        <div class="item"><p class="t">교복 입는 법</p><div class="c"><p class="v plain">${esc(p.uniform)}</p><p class="n">${esc(p.uniform_note)}</p></div></div>
+        <div class="item"><p class="t">잘하는 과목</p><div class="c"><p class="v">${esc(p.best_subject)}</p><p class="n">${esc(p.best_reason)}</p></div></div>
+        <div class="item"><p class="t">약한 과목</p><div class="c"><p class="v">${esc(p.weak_subject)}</p><p class="n">${esc(p.weak_reason)}</p></div></div>
+        <div class="item"><p class="t">습관</p><div class="c"><ul class="habits">${(p.habits || []).map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div></div>
+        <div class="item"><p class="t">지팡이</p><div class="c"><p class="v">${esc(w.wood)} · ${esc(w.core)} · ${esc(w.length)} · ${esc(w.flexibility)}</p>
+          <p class="n"><b>나무</b> — ${esc(w.wood_note)}</p><p class="n"><b>심</b> — ${esc(w.core_note)}</p><p class="n"><b>길이·유연성</b> — ${esc(w.build_note)}</p></div></div>
+        <div class="item"><p class="t">졸업 후 직업</p><div class="c"><p class="v">${esc(p.career)}</p><p class="n">${esc(p.career_reason)}</p></div></div>
+        </div>
       </article>`;
   }
   function soloSheet(el, p) {
@@ -495,8 +585,8 @@
     const [a, b] = res.characters;
     el.className = 'sheet';
     el.innerHTML = `<div class="frame">
-      <div class="bond"><p class="pn">${esc(a.name)} × ${esc(b.name)}</p><h2>${esc(res.relationship.headline)}</h2><p class="sum">${esc(res.relationship.summary)}</p>
-        <div class="orn" aria-hidden="true"><i></i><b></b><i></i></div></div>
+      <div class="bond"><div class="bt"><p class="pn">${esc(a.name)} × ${esc(b.name)}</p><h2>${esc(res.relationship.headline)}</h2><p class="sum">${esc(res.relationship.summary)}</p></div>
+        <div class="orn" aria-hidden="true"><i></i><b></b><i></i></div><p class="doc">HOGWARTS<br>SORTING RECORD</p></div>
       <div class="cols">${person(a)}${person(b)}</div></div>`;
     el.dataset.file = fname(`${a.name}_${b.name}_기숙사배정`);
   }
@@ -532,7 +622,7 @@
     try {
       if (document.fonts && document.fonts.ready) await document.fonts.ready;
       sheet.style.borderRadius = '0'; sheet.style.boxShadow = 'none';
-      const bg = document.body.classList.contains('tie') ? '#fffdf8' : '#efe3c8';
+      const bg = SAVE_BG[document.body.className] || '#ffffff';
       const canvas = await html2canvas(sheet, { scale: 2, backgroundColor: bg, useCORS: true });
       const a = document.createElement('a');
       a.download = (sheet.dataset.file || 'hogwarts-sorting') + '.png';
@@ -545,7 +635,7 @@
 
   // ---------- 미리보기 : ?demo=1 (페어) / ?demo=solo (1인), &theme=tie — API 없이 화면만 확인 ----------
   const qs = new URLSearchParams(location.search);
-  if (qs.get('theme') === 'tie' || qs.get('theme') === 'parchment') setTheme(qs.get('theme'));
+  if (THEMES.includes(qs.get('theme'))) setTheme(qs.get('theme'));
   if (qs.has('demo')) {
     const A = { name: '한서윤', house: '래번클로',
       house_reason: '답을 전해 듣는 것으로는 만족하지 못하고 직접 확인해야 납득하는 인물이다. 궁금한 것이 생기면 규칙보다 호기심이 먼저 움직이며, 그 대가를 치르는 일에도 거리낌이 없다.',
